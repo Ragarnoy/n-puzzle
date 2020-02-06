@@ -11,7 +11,7 @@
 
 ### Node representation:
 ```Rust
-Struct Node {
+struct Node {
     state: State,
     grid: Grid,
     parent: Option<Node>,
@@ -25,7 +25,7 @@ Struct Node {
 
 ### State representation:
 ```Rust
-Struct State {
+struct State {
     h: u16,
     g: u32,
     f: u32,
@@ -41,7 +41,7 @@ Struct State {
 
 ### Grid representation:
 ```Rust
-Struct Grid {
+struct Grid {
     map: Vec<u16>,
     z_pos: u16, // Absolute position
 }
