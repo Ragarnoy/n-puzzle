@@ -1,5 +1,4 @@
 use std::cmp::{Ordering, Ord};
-
 #[derive(Eq, PartialEq, PartialOrd)]
 pub struct State
 {
@@ -37,5 +36,53 @@ impl Ord for State
                 Ordering::Equal
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests
+{
+    use super::*;
+    #[test]
+    fn test_cmp_greater_f()
+    {
+        let small = State{h: 1, g: 1, f: 1};
+        let big = State{h: 3, g: 1, f: 5};
+        assert_eq!(big.cmp(&small), Ordering::Greater);
+    }
+    #[test]
+    fn test_cmp_lesser_f()
+    {
+        let small = State{h: 1, g: 1, f: 1};
+        let big = State{h: 3, g: 1, f: 5};
+        assert_eq!(small.cmp(&big), Ordering::Less);
+    }
+    #[test]
+    fn test_cmp_greater_h()
+    {
+        let small = State{h: 1, g: 2, f: 5};
+        let big = State{h: 3, g: 2, f: 5};
+        assert_eq!(big.cmp(&small), Ordering::Greater);
+    }
+    #[test]
+    fn test_cmp_lesser_h()
+    {
+        let small = State{h: 1, g: 2, f: 5};
+        let big = State{h: 3, g: 2, f: 5};
+        assert_eq!(small.cmp(&big), Ordering::Less);
+    }
+    #[test]
+    fn test_cmp_greater_g()
+    {
+        let small = State{h: 3, g: 1, f: 5};
+        let big = State{h: 3, g: 2, f: 5};
+        assert_eq!(big.cmp(&small), Ordering::Greater);
+    }
+    #[test]
+    fn test_cmp_equal()
+    {
+        let small = State{h: 1, g: 1, f: 5};
+        let big = State{h: 1, g: 1, f: 5};
+        assert_eq!(big.cmp(&small), Ordering::Equal);
     }
 }
