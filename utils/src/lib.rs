@@ -1,3 +1,8 @@
+// This function take a `&str` as input and split it on whitespaces.
+// `start_with` is to pass the char or str we want to use as comment's start.
+// This function return a Vec<String> for which each element is a non-empty line without any comment.
+// e.g. the string "this is a test\n# this is a comment\nthis is another line # and another comment"
+// passed through this function will gives you ["this is a test", "this is another line "]
 pub fn remove_comment_by_line(input: &str, start_with: &str) -> Vec<String>
 {
 	input.lines().filter_map(|line| {
@@ -16,14 +21,59 @@ pub fn remove_comment_by_line(input: &str, start_with: &str) -> Vec<String>
 
 #[cfg(test)]
 mod tests {
-	use crate::*;
+	mod remove_comment_by_line {
+		use crate::remove_comment_by_line;
+		#[test]
+		fn one_line_without_newline_nor_comment_empty_pattern()
+		{
+			let line = "this a test";
+			let result = remove_comment_by_line(line, "");
 
-    #[test]
-    fn one_line_without_newline_nor_comment() {
-		let line = "this a test";
-		let result = remove_comment_by_line(line, "");
+			assert!(result.is_empty());
+		}
 
-		assert!(!result.is_empty());
-		assert_eq!(result, vec!(line));
-    }
+		#[test]
+		fn one_line_without_newline_nor_comment_sharp_pattern()
+		{
+			let line = "this a test";
+			let expect = vec!(line);
+			let result = remove_comment_by_line(line, "#");
+
+			assert!(!result.is_empty());
+			assert_eq!(result, vec!(line));
+		}
+
+		#[test]
+		fn one_line_without_newline_with_comment_sharp_pattern()
+		{
+			let expect = vec!("this a test ");
+			let line = "this a test # here is a comment";
+			let result = remove_comment_by_line(line, "#");
+
+			assert!(!result.is_empty());
+			assert_eq!(result, expect);
+		}
+
+		#[test]
+		fn one_line_with_newline_and_comment_in_line_sharp_pattern()
+		{
+			let expect = vec!("this a test ", "this is another test line");
+			let line = "this a test # here is a comment\nthis is another test line";
+			let result = remove_comment_by_line(line, "#");
+
+			assert!(!result.is_empty());
+			assert_eq!(result, expect);
+		}
+
+		#[test]
+		fn one_line_with_newline_and_comment_start_line_sharp_pattern()
+		{
+			let expect = vec!("this a test");
+			let line = "this a test\n   	# here is a comment";
+			let result = remove_comment_by_line(line, "#");
+
+			assert!(!result.is_empty());
+			assert_eq!(result, expect);
+		}
+	}
 }
