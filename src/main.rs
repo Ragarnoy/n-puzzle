@@ -2,8 +2,10 @@
 extern crate clap;
 
 mod state;
+mod grid;
+mod node;
 use clap::{Arg, App};
-use std::{path::Path, fs, io::Error};
+use std::{path::Path, fs};
 
 
 fn main() {
@@ -22,9 +24,4 @@ fn main() {
     println!("{}", content);
 
     // TODO Parser here
-
-    let input: Vec<Vec<u32>> = vec![
-                        vec![1,2,3],
-                        vec![4,0,6],
-                        vec![7,8,9]];
 }
