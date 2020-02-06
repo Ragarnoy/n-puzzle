@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate clap;
 
+mod state;
 use clap::{Arg, App};
 use std::{path::Path, fs, io::Error};
-
 
 
 fn main() {
