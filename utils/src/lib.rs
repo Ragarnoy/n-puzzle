@@ -55,7 +55,7 @@ mod tests {
 		}
 
 		#[test]
-		fn one_line_with_newline_and_comment_in_line_sharp_pattern()
+		fn two_lines_with_one_comment_in_line_sharp_pattern()
 		{
 			let expect = vec!("this a test ", "this is another test line");
 			let line = "this a test # here is a comment\nthis is another test line";
@@ -66,10 +66,21 @@ mod tests {
 		}
 
 		#[test]
-		fn one_line_with_newline_and_comment_start_line_sharp_pattern()
+		fn two_lines_with_comment_start_line_sharp_pattern()
 		{
 			let expect = vec!("this a test");
 			let line = "this a test\n   	# here is a comment";
+			let result = remove_comment_by_line(line, "#");
+
+			assert!(!result.is_empty());
+			assert_eq!(result, expect);
+		}
+
+		#[test]
+		fn three_lines_with_comment_start_line_and_mid_line_sharp_pattern()
+		{
+			let expect = vec!("this a test", "this is another line ");
+			let line = "this a test\n   	# here is a comment\nthis is another line # with another comment";
 			let result = remove_comment_by_line(line, "#");
 
 			assert!(!result.is_empty());
