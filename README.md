@@ -75,8 +75,7 @@ struct Grid {
 # Ideas:
 - **closedList** should probably be a BTreeSet (for read access speed)
 - **openList** should probably be a BinaryHeap (for auto-sort and quick read access)
-- we probably need a tree to represent all the nodes and their parent
-- 
+- ~~we probably need a tree to represent all the nodes and their parent~~ no need to use a tree of any kind for this since we don't care about retrieving child from its parent (the only thing we care about is being able to retrieve a parent from one of its child)
 
 # Note:
 ## Bonuses:
