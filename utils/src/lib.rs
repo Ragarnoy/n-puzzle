@@ -1,4 +1,4 @@
-mod coord;
+pub mod coord;
 
 // This function take a `&str` as input and split it on new lines.
 // `start_with` is to pass the char or str we want to use as comment's start.
