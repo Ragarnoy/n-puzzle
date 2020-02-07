@@ -65,6 +65,13 @@ struct Grid {
 - `Left` -> tile `0` goes left
 - The tile cannot go outside of the table (obviously)
 
+## How we use axis
+|      | x0 | x1 | x2 |
+|------|----|----|----|
+|**y0**|  1 |  2 |  3 |
+|**y1**|  4 |  5 |  6 |
+|**y2**|  7 |  8 |  0 |
+
 # Ideas:
 - **closedList** should probably be a BTreeSet (for read access speed)
 - **openList** should probably be a BinaryHeap (for auto-sort and quick read access)
