@@ -20,8 +20,10 @@ pub fn remove_comment_by_line(input: &str, start_with: &str) -> Vec<String>
 }
 
 #[cfg(test)]
-mod tests {
-	mod remove_comment_by_line {
+mod tests
+{
+	mod remove_comment_by_line
+	{
 		use crate::remove_comment_by_line;
 		#[test]
 		fn one_line_without_newline_nor_comment_empty_pattern()
