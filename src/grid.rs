@@ -1,4 +1,4 @@
-#[derive(Eq, PartialEq, PartialOrd, Clone, Copy)]
+#[derive(Eq, PartialEq, PartialOrd, Clone)]
 pub struct Grid
 {
     map: Vec<u16>,

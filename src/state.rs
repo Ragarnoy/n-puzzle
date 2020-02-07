@@ -1,4 +1,5 @@
 use std::cmp::{Ordering, Ord};
+use crate::grid::Grid;
 #[derive(Eq, PartialEq, PartialOrd, Clone)]
 pub struct State
 {
@@ -38,6 +39,61 @@ impl Ord for State
         }
     }
 }
+
+impl State
+{
+    fn new(h:u16, g:u32, f:u32) -> Self
+    {
+        State
+        {
+            h,
+            g,
+            f
+        }
+    }
+    
+    fn update(&self, grid: Vec<u16>, goal: Vec<u16>) -> State
+    {
+        let (h, g) = (manning(grid, goal), self.g + 1);
+        State
+        {
+            h,
+            g,
+            f: g + h as u32,
+        }
+    }
+}
+
+
+
+fn manning(input: Vec<u16>, goal: Vec<u16>) -> u16
+{
+    let mut ret:u16 = 0;
+
+    ret = input.iter().zip(goal.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
+    {
+        if i != g 
+        {
+            acc + 1
+        }
+        else
+        {
+            acc
+        }
+    });
+    ret
+}
+
+// fn manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
+// {
+
+// }
+
+// fn linear_manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
+// {
+
+// }
+
 
 #[cfg(test)]
 mod tests
