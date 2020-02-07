@@ -1,6 +1,6 @@
 mod coord;
 
-// This function take a `&str` as input and split it on whitespaces.
+// This function take a `&str` as input and split it on new lines.
 // `start_with` is to pass the char or str we want to use as comment's start.
 // This function return a Vec<String> for which each element is a non-empty line without any comment.
 // e.g. the string "this is a test\n# this is a comment\nthis is another line # and another comment"
