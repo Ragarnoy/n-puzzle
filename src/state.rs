@@ -1,5 +1,5 @@
 use std::cmp::{Ordering, Ord};
-#[derive(Eq, PartialEq, PartialOrd)]
+#[derive(Eq, PartialEq, PartialOrd, Clone)]
 pub struct State
 {
     h:u16,
