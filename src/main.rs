@@ -1,12 +1,15 @@
 #[macro_use]
 extern crate clap;
 extern crate utils;
+extern crate rand;
 
 mod state;
 mod grid;
 mod node;
 use clap::{Arg, App};
 use std::{path::Path, fs};
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 
 fn summon_snail(lgth: u8) -> Vec<u16>
 {
@@ -56,7 +59,18 @@ fn summon_snail(lgth: u8) -> Vec<u16>
     }
 }
 
+fn random_puzzle(input: u8) -> Vec<u16>
+{
+    let mut rng = thread_rng();
+    let mut snail = summon_snail(input);
+    println!("{:#?}", snail);
+    snail.shuffle(&mut rng);
+    println!("{:#?}", snail);
+    snail
+}
+
 fn main() {
+    random_puzzle(5);
     //     let matches = App::new("N-Puzzle")
     //                 .version(crate_version!())
     //                 .author(crate_authors!())

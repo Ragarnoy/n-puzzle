@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 clap = "*"
+rand = "*"
 utils = { path = "./utils" }
