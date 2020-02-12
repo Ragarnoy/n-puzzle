@@ -1,6 +1,7 @@
 use std::fmt;
 use utils::coord::Coord;
 
+#[derive(Copy, Clone)]
 pub enum Move
 {
     Up,
@@ -15,15 +16,15 @@ impl Move
     {
         match self
         {
-            Self::Up => coord.dec_y(),
-            Self::Down => coord.inc_y(),
-            Self::Right => coord.inc_x(),
-            Self::Left => coord.dec_x()
+            Move::Up => coord.dec_y(),
+            Move::Down => coord.inc_y(),
+            Move::Right => coord.inc_x(),
+            Move::Left => coord.dec_x()
         };
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Eq, PartialEq, Clone)]
 pub struct Grid
 {
     map: Vec<u16>,
@@ -60,6 +61,11 @@ impl Grid
             map,
             z_pos: z_pos as u16
         })
+    }
+
+    pub fn move_all_possible(&self, col: u8) -> Vec<Self>
+    {
+        [Move::Up, Move::Down, Move::Right, Move::Left].iter().filter_map(|&m| self.move_zero(m, col)).collect()
     }
 }
 

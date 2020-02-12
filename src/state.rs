@@ -4,7 +4,7 @@ use crate::grid::Grid;
 pub struct State
 {
     h:u16,
-    g:u32,
+    pub g:u32,
     f:u32,
 }
 
@@ -42,7 +42,7 @@ impl Ord for State
 
 impl State
 {
-    fn new(h:u16, g:u32, f:u32) -> Self
+    pub fn new(h:u16, g:u32, f:u32) -> Self
     {
         State
         {
@@ -52,7 +52,7 @@ impl State
         }
     }
     
-    fn update(&self, grid: Vec<u16>, goal: Vec<u16>) -> State
+    pub fn update(&self, grid: Vec<u16>, goal: Vec<u16>) -> State
     {
         let (h, g) = (manning(grid, goal), self.g + 1);
         State

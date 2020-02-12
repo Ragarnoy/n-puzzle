@@ -2,7 +2,7 @@ use std::cmp::{Ordering, Ord};
 use std::rc::Rc;
 use crate::{state::State, grid::Grid};
 
-#[derive(Eq, PartialEq, PartialOrd, Clone)]
+#[derive(Eq, PartialEq, Clone)]
 pub struct Node
 {
     grid: Grid,
@@ -18,6 +18,14 @@ impl Ord for Node
     }
 }
 
+impl PartialOrd for Node
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>
+    {
+        Some(self.state.cmp(&other.state))
+    }
+}
+
 impl Node
 {
     fn new(state: State, grid: Grid) -> Self
@@ -30,16 +38,16 @@ impl Node
         }
     }
 
-    fn generate_child(rcnode: Rc<Self>) -> Vec<Node>
+    fn generate_child(rcnode: Rc<Self>, col: u8) -> Vec<Node>
     {
         let mut ret:Vec<Node> = Vec::new();
-        for grid in //Grid::Move()
+        for grid in rcnode.grid.move_all_possible(col)
         {
             ret.push(Node
             {
-                grid, // grid
-                state, //state from grid
-                parent: Some(rcnode), //?
+                grid,
+                state: State::new(0, rcnode.state.g, 0),
+                parent: Some(Rc::clone(&rcnode)),
             }
             );
         }
