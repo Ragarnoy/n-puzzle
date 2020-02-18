@@ -1,13 +1,22 @@
 use std::cmp::{Ordering, Ord};
 use std::rc::Rc;
+use std::cell::RefCell;
 use crate::{state::State, grid::Grid};
 
-#[derive(Eq, PartialEq, Clone)]
+#[derive(Eq, Clone)]
 pub struct Node
 {
-    grid: Grid,
-    state: State,
-    parent: Option<Rc<Node>>,
+    pub grid: Grid,
+    pub state: State,
+    pub parent: Option<Rc<RefCell<Node>>>,
+}
+
+impl PartialEq for Node
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        self.grid == other.grid
+    }
 }
 
 impl Ord for Node
@@ -28,7 +37,7 @@ impl PartialOrd for Node
 
 impl Node
 {
-    fn new(state: State, grid: Grid) -> Self
+    pub fn new(state: State, grid: Grid) -> Self
     {
         Node
         {
@@ -38,21 +47,23 @@ impl Node
         }
     }
 
-    fn generate_child(rcnode: Rc<Self>, col: u8) -> Vec<Node>
+    pub fn generate_childs(node: Rc<RefCell<Self>>, col: u8) -> Vec<Rc<RefCell<Node>>>
     {
-        let mut ret:Vec<Node> = Vec::new();
-        for grid in rcnode.grid.move_all_possible(col)
+        let mut ret:Vec<Rc<RefCell<Node>>> = Vec::new();
+        for grid in node.borrow().grid.move_all_possible(col)
         {
-            ret.push(Node
+            ret.push(Rc::new(RefCell::new(Node
             {
                 grid,
-                state: State::new(0, rcnode.state.g, 0),
-                parent: Some(Rc::clone(&rcnode)),
-            }
-            );
+                state: State::new(0, node.borrow().state.g + 1, 0),
+                parent: Some(Rc::clone(&node)),
+            })));
         }
         ret
     }
 
-
+    pub fn update_state(&mut self, goal: &Grid)
+    {
+        self.state.update(&self.grid, goal);
+    }
 }

@@ -67,6 +67,34 @@ impl Grid
     {
         [Move::Up, Move::Down, Move::Right, Move::Left].iter().filter_map(|&m| self.move_zero(m, col)).collect()
     }
+
+    pub fn manning(&self, goal: &Self) -> u16
+    {
+        let mut ret:u16 = 0;
+
+        ret = self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
+        {
+            if i != g 
+            {
+                acc + 1
+            }
+            else
+            {
+                acc
+            }
+        });
+        ret
+    }
+
+    // fn manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
+    // {
+
+    // }
+
+    // fn linear_manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
+    // {
+
+    // }
 }
 
 impl fmt::Display for Grid

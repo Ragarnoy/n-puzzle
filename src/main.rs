@@ -5,6 +5,7 @@ extern crate utils;
 mod state;
 mod grid;
 mod node;
+mod algo;
 use clap::{Arg, App};
 use std::{path::Path, fs};
 
