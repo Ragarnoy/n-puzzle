@@ -42,6 +42,11 @@ impl Grid
         }
     }
 
+    pub fn get_map(&self) -> Vec<u16>
+    {
+        self.map.clone()
+    }
+
     pub fn move_zero(&self, mov: Move, col: u8) -> Option<Self>
     {
         let mut z_pos = Coord::from_abs(self.z_pos as u32, col);
