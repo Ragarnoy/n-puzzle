@@ -3,7 +3,7 @@ extern crate rand;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-fn summon_snail(lgth: u8) -> Vec<u16>
+pub fn summon_snail(lgth: u8) -> Vec<u16>
 {
     if lgth == 3
     {

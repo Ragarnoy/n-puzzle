@@ -9,8 +9,17 @@ mod puzzle_gen;
 use clap::{Arg, App};
 use std::{path::Path, fs};
 
+fn check_result(input: Vec<u16>, lght: u8) -> bool
+{
+    if input == puzzle_gen::summon_snail(lght)
+    {
+        return true;
+    }
+    false
+}
+
 fn main() {
-    puzzle_gen::random_puzzle(5);
+    println!("{}", grid::Grid::new(puzzle_gen::random_puzzle(7)));
     //     let matches = App::new("N-Puzzle")
     //                 .version(crate_version!())
     //                 .author(crate_authors!())
