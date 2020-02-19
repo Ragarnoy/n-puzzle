@@ -94,7 +94,7 @@ mod tests
     use super::*;
 
     #[test]
-    fn diplay()
+    fn display()
     {
         let test = Grid::new(vec!(1, 2, 3, 4, 5, 6, 7, 8, 0));
         println!("{}", test);
