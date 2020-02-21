@@ -55,9 +55,7 @@ pub fn random_puzzle(input: u8) -> Vec<u16>
 {
     let mut rng = thread_rng();
     let mut snail = summon_snail(input);
-    println!("{:?}", snail);
     snail.shuffle(&mut rng);
-    println!("{:?}", snail);
     snail
 }
 

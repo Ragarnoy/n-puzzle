@@ -1,7 +1,7 @@
 use std::fmt;
 use utils::coord::Coord;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Move
 {
     Up,
@@ -24,7 +24,7 @@ impl Move
     }
 }
 
-#[derive(Eq, PartialEq, Clone)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Grid
 {
     map: Vec<u16>,

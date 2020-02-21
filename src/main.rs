@@ -38,18 +38,17 @@ fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
 fn parser(content: String) -> Result<grid::Grid, String>
 {
     let ret: Vec<u16> = content.split(char::is_whitespace).flat_map(|x| x.parse()).collect();
-    let sqr_len: u16 = (ret.len() as f64).sqrt() as u16;
-    if sqr_len > 2 && sqr_len < 8 && sort_check_and_dedup(ret.clone())
+    let sqr_len = (ret.len() as f64).sqrt();
+    if sqr_len.fract() == 0.0 && sqr_len > 2.0 && sqr_len < 8.0 && sort_check_and_dedup(ret.clone())
     {
+        println!("{}",grid::Grid::new(ret.clone()));
         return Ok(grid::Grid::new(ret))
     }
-    println!("{:#?}, sqr = {}", content, sqr_len);
     Err("Invalid puzzle format".into())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> 
 {
-    //println!("{}", grid::Grid::new(puzzle_gen::random_puzzle(7)));
     let matches = App::new("N-Puzzle")
                 .version(crate_version!())
                 .author(crate_authors!())
@@ -72,10 +71,65 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
 mod tests
 {
     use super::*;
+    use rand::seq::SliceRandom;
+    use rand::thread_rng;
 
     #[test]
-    fn parsing()
+    fn parsing_pass_three()
     {
-        assert_eq!(parser("0 9 2 3 6 4 5 8 7 1 11 10".into()).unwrap().get_map(), vec![0, 9, 2, 3, 6, 4, 5, 8, 7, 1, 11, 10]);
+        let mut rng = thread_rng();
+        let mut test_vec: Vec<u16> = (0..9).collect();
+        test_vec.shuffle(&mut rng);
+        let test_str: String = test_vec.iter().map(|x| x.to_string() + " ").collect();
+        assert_eq!(parser(test_str).unwrap().get_map(), test_vec);
+    }
+
+    #[test]
+    fn parsing_pass_four()
+    {
+        let mut rng = thread_rng();
+        let mut test_vec: Vec<u16> = (0..16).collect();
+        test_vec.shuffle(&mut rng);
+        let test_str: String = test_vec.iter().map(|x| x.to_string() + " ").collect();
+        assert_eq!(parser(test_str).unwrap().get_map(), test_vec);
+    }
+
+    #[test]
+    fn parsing_pass_five()
+    {
+        let mut rng = thread_rng();
+        let mut test_vec: Vec<u16> = (0..25).collect();
+        test_vec.shuffle(&mut rng);
+        let test_str: String = test_vec.iter().map(|x| x.to_string() + " ").collect();
+        assert_eq!(parser(test_str).unwrap().get_map(), test_vec);
+    }
+
+    #[test]
+    fn parsing_pass_six()
+    {
+        let mut rng = thread_rng();
+        let mut test_vec: Vec<u16> = (0..36).collect();
+        test_vec.shuffle(&mut rng);
+        let test_str: String = test_vec.iter().map(|x| x.to_string() + " ").collect();
+        assert_eq!(parser(test_str).unwrap().get_map(), test_vec);
+    }
+
+    #[test]
+    fn parsing_fail_length()
+    {
+        let test_vec: Vec<u16> = (0..37).collect();
+        let test_str: String = test_vec.iter().map(|x| x.to_string() + " ").collect();
+        assert_eq!(parser(test_str), Err("Invalid puzzle format".into()));
+    }
+
+    #[test]
+    fn parsing_fail_char()
+    {
+        let mut test_str: String = "0 1 2 3 4 5 6 7 W 9".into();
+        assert_eq!(parser(test_str), Err("Invalid puzzle format".into()));
+        test_str = "D W 2 D 4 F 6 7 W 9".into();
+        assert_eq!(parser(test_str), Err("Invalid puzzle format".into()));
+        test_str = "0 1 2 3 4 5 6 7 8 9 W Q A X C W".into();
+        assert_eq!(parser(test_str), Err("Invalid puzzle format".into()));
     }
 }
