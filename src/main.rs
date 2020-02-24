@@ -63,7 +63,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     println!("{}", grid);
 
     Ok(())
-    // TODO Parser here
 }
 
 
