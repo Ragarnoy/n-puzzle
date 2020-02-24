@@ -1,34 +1,64 @@
 use std::cmp::{Ordering, Ord};
 use crate::grid::Grid;
-#[derive(Eq, PartialEq, PartialOrd, Clone)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct State
 {
-    h:u16,
-    pub g:u32,
-    f:u32,
+    pub h: u16,
+    pub g: u32,
+    pub f: u32,
 }
 
-// TODO Generate h from grid method that executes heuristic funtion
+// TODO Generate h from grid method that executes heuristic function
 
-impl Ord for State
+impl PartialOrd for State
 {
-    fn cmp(&self, other: &Self) -> Ordering
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering>
     {
-        if self.f > other.f
+        Some(if other.f > self.f
         {
             Ordering::Greater
         }
-        else if self.f < other.f
+        else if other.f < self.f
         {
             Ordering::Less
         }
         else
         {
-            if (self.h > other.h) || (self.h == other.h && self.g > other.g)
+            if (other.h > self.h) || (other.h == self.h && other.g > self.g)
             {
                 Ordering::Greater
             }
-            else if (self.h < other.h) || (self.h == other.h && self.g < other.g)
+            else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
+            {
+                Ordering::Less
+            }
+            else
+            {
+                Ordering::Equal
+            }
+        })
+    }
+}
+
+impl Ord for State
+{
+    fn cmp(&self, other: &Self) -> Ordering
+    {
+        if other.f > self.f
+        {
+            Ordering::Greater
+        }
+        else if other.f < self.f
+        {
+            Ordering::Less
+        }
+        else
+        {
+            if (other.h > self.h) || (other.h == self.h && other.g > self.g)
+            {
+                Ordering::Greater
+            }
+            else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
             {
                 Ordering::Less
             }
@@ -52,48 +82,12 @@ impl State
         }
     }
     
-    pub fn update(&self, grid: Vec<u16>, goal: Vec<u16>) -> State
+    pub fn update(&mut self, grid: &Grid, goal: &Grid)
     {
-        let (h, g) = (manning(grid, goal), self.g + 1);
-        State
-        {
-            h,
-            g,
-            f: g + h as u32,
-        }
+        self.h = grid.manning(goal);
+        self.f = self.g + self.h as u32;
     }
 }
-
-
-
-fn manning(input: Vec<u16>, goal: Vec<u16>) -> u16
-{
-    let mut ret:u16 = 0;
-
-    ret = input.iter().zip(goal.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
-    {
-        if i != g 
-        {
-            acc + 1
-        }
-        else
-        {
-            acc
-        }
-    });
-    ret
-}
-
-// fn manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
-// {
-
-// }
-
-// fn linear_manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
-// {
-
-// }
-
 
 #[cfg(test)]
 mod tests
@@ -104,35 +98,35 @@ mod tests
     {
         let small = State{h: 1, g: 1, f: 1};
         let big = State{h: 3, g: 1, f: 5};
-        assert_eq!(big.cmp(&small), Ordering::Greater);
+        assert_eq!(big.cmp(&small), Ordering::Less);
     }
     #[test]
     fn test_cmp_lesser_f()
     {
         let small = State{h: 1, g: 1, f: 1};
         let big = State{h: 3, g: 1, f: 5};
-        assert_eq!(small.cmp(&big), Ordering::Less);
+        assert_eq!(small.cmp(&big), Ordering::Greater);
     }
     #[test]
     fn test_cmp_greater_h()
     {
         let small = State{h: 1, g: 2, f: 5};
         let big = State{h: 3, g: 2, f: 5};
-        assert_eq!(big.cmp(&small), Ordering::Greater);
+        assert_eq!(big.cmp(&small), Ordering::Less);
     }
     #[test]
     fn test_cmp_lesser_h()
     {
         let small = State{h: 1, g: 2, f: 5};
         let big = State{h: 3, g: 2, f: 5};
-        assert_eq!(small.cmp(&big), Ordering::Less);
+        assert_eq!(small.cmp(&big), Ordering::Greater);
     }
     #[test]
     fn test_cmp_greater_g()
     {
         let small = State{h: 3, g: 1, f: 5};
         let big = State{h: 3, g: 2, f: 5};
-        assert_eq!(big.cmp(&small), Ordering::Greater);
+        assert_eq!(big.cmp(&small), Ordering::Less);
     }
     #[test]
     fn test_cmp_equal()

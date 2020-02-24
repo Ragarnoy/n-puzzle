@@ -6,6 +6,7 @@ mod state;
 mod grid;
 mod node;
 mod puzzle_gen;
+mod algo;
 use clap::{Arg, App};
 use std::{path::Path, fs};
 
