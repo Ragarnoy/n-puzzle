@@ -15,7 +15,7 @@ pub fn remove_comment_by_line(input: &str, start_with: &str) -> Vec<String>
 		}
 		if let Some((index, _)) = line.match_indices(start_with).next()
 		{
-			return Some(line[..index].into());
+			return Some(line[..index].trim().into());
 		}
 		Some(line.into())
 	}).collect()
