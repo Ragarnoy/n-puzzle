@@ -50,7 +50,7 @@ mod tests
 		#[test]
 		fn one_line_without_newline_with_comment_sharp_pattern()
 		{
-			let expect = vec!("this a test ");
+			let expect = vec!("this a test");
 			let line = "this a test # here is a comment";
 			let result = remove_comment_by_line(line, "#");
 
@@ -61,7 +61,7 @@ mod tests
 		#[test]
 		fn two_lines_with_one_comment_in_line_sharp_pattern()
 		{
-			let expect = vec!("this a test ", "this is another test line");
+			let expect = vec!("this a test", "this is another test line");
 			let line = "this a test # here is a comment\nthis is another test line";
 			let result = remove_comment_by_line(line, "#");
 
@@ -83,7 +83,7 @@ mod tests
 		#[test]
 		fn three_lines_with_comment_start_line_and_mid_line_sharp_pattern()
 		{
-			let expect = vec!("this a test", "this is another line ");
+			let expect = vec!("this a test", "this is another line");
 			let line = "this a test\n   	# here is a comment\nthis is another line # with another comment";
 			let result = remove_comment_by_line(line, "#");
 
