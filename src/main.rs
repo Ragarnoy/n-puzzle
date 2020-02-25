@@ -9,6 +9,7 @@ mod puzzle_gen;
 mod algo;
 use clap::{Arg, App};
 use std::{path::Path, fs};
+use grid::Grid;
 
 fn check_result(input: Vec<u16>, lgth: u8) -> bool
 {
@@ -29,23 +30,47 @@ fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
     let len = input.len();
     input.sort();
     input.dedup();
-    if input.len() == len && *input.last().unwrap() == len as u16 - 1  && *input.first().unwrap() == 0
-    {
-        return true
-    }
-    false
+    // The line below could seem weird as there is no `if` but in fact this line already returns a `bool` as expected.
+    input.len() == len && *input.last().unwrap() == len as u16 - 1  && *input.first().unwrap() == 0
 }
 
 fn parser(content: String) -> Result<grid::Grid, String>
 {
-    let ret: Vec<u16> = content.split(char::is_whitespace).flat_map(|x| x.parse()).collect();
-    let sqr_len = (ret.len() as f64).sqrt();
-    if sqr_len.fract() == 0.0 && sqr_len > 2.0 && sqr_len < 8.0 && sort_check_and_dedup(ret.clone())
+    let mut ret: Vec<u16> = Vec::new();
+    let content_lines = utils::remove_comment_by_line(&content, "#");
+    let nb_lines = content_lines.len();
+
+    for line in content_lines
     {
-        println!("{}",grid::Grid::new(ret.clone()));
-        return Ok(grid::Grid::new(ret))
+        let mut invalid_token = false;
+        let mut parsed_line: Vec<u16> = line.split(char::is_whitespace).map(|x| {
+            let res = x.parse::<u16>();
+            if res.is_err()
+            {
+                invalid_token = true;
+            }
+            res.unwrap_or(0)
+        }).collect();
+        if invalid_token
+        {
+            return Err(format!("At least one invalid token found in the following line: {}", line));
+        }
+        else if parsed_line.len() != nb_lines
+        {
+            return Err(format!("Invalid puzzle format: we have {} lines but the following line contains {} columns: {}", nb_lines, parsed_line.len(), line));
+        }
+        ret.append(&mut parsed_line);
     }
-    Err("Invalid puzzle format".into())
+    if sort_check_and_dedup(ret.clone())
+    {
+        // No need to clone `ret` here because it will be dropped at the end
+        // of this function so we can safely give ownership to the new `Grid`.
+        Ok(Grid::new(ret))
+    }
+    else
+    {
+        Err("Invalid puzzle format".into())
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> 
