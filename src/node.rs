@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use crate::{state::State, grid::Grid};
 
-#[derive(Eq, Clone)]
+#[derive(Eq, Clone, Debug)]
 pub struct Node
 {
     pub grid: Grid,

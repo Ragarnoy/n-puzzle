@@ -10,6 +10,9 @@ mod algo;
 use clap::{Arg, App};
 use std::{path::Path, fs};
 use grid::Grid;
+use node::Node;
+use state::State;
+use algo::Algo;
 
 fn check_result(input: Vec<u16>, lgth: u8) -> bool
 {
@@ -34,7 +37,7 @@ fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
     input.len() == len && *input.last().unwrap() == len as u16 - 1  && *input.first().unwrap() == 0
 }
 
-fn parser(content: String) -> Result<grid::Grid, String>
+fn parser(content: String) -> Result<(u8, grid::Grid), String>
 {
     let mut ret: Vec<u16> = Vec::new();
     let content_lines = utils::remove_comment_by_line(&content, "#");
@@ -65,7 +68,7 @@ fn parser(content: String) -> Result<grid::Grid, String>
     {
         // No need to clone `ret` here because it will be dropped at the end
         // of this function so we can safely give ownership to the new `Grid`.
-        Ok(Grid::new(ret))
+        Ok((nb_lines as u8, Grid::new(ret)))
     }
     else
     {
@@ -85,8 +88,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                 .get_matches();
 
     let content = fs::read_to_string(Path::new(matches.value_of("input").unwrap())).unwrap();
-    let grid = parser(content)?;
-    println!("{}", grid);
+    let (nb_col, grid) = parser(content)?;
+    let mut initial_node = Node::new(State::default(), grid);
+    let goal = Grid::new(puzzle_gen::summon_snail(nb_col));
+    initial_node.update_state(&goal);
+    let mut algo = Algo::new(initial_node, goal, nb_col);
+    let result = algo.resolve();
+    println!("{:#?}", result);
 
     Ok(())
 }

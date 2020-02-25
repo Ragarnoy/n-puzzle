@@ -1,0 +1,7 @@
+# This is a comment.
+        #This is another comment which should cause an empty line when removing it.
+0 1 2
+8 6 3
+7 5 4
+
+# There is an empty line we should skip right above this one and the current line should go away as well.

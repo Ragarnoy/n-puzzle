@@ -1,6 +1,6 @@
 use std::cmp::{Ordering, Ord};
 use crate::grid::Grid;
-#[derive(Eq, PartialEq, Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug, Default)]
 pub struct State
 {
     pub h: u16,

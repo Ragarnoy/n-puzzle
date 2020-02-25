@@ -33,6 +33,7 @@ impl Algo
     {
         while let Some(node) = self.open_list.pop()
         {
+            println!("DEBUG::algo::resolve: poped node's g score: {}", node.borrow().state.g);
             if node.borrow().grid == self.goal
             {
                 return Some(node);
@@ -51,13 +52,15 @@ impl Algo
 
                     for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
                     {
+                        let new_f = node.borrow().state.h as u32 + child_g;
                         node.borrow_mut().state.g = child_g;
-                        node.borrow_mut().state.f = node.borrow().state.h as u32 + node.borrow().state.g;
+                        node.borrow_mut().state.f = new_f;
                         node.borrow_mut().parent = Some(Rc::clone(&child_parent));
                     }
                 }
                 else
                 {
+                    // println!("DEBUG::algo::resolve::child: {:#?}", child);
                     child.borrow_mut().update_state(&self.goal);
                     self.open_list.push(child)
                 }
