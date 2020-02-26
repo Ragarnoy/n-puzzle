@@ -33,12 +33,15 @@ impl Algo
     {
         while let Some(node) = self.open_list.pop()
         {
-            println!("DEBUG::algo::resolve: poped node's g score: {}", node.borrow().state.g);
             if node.borrow().grid == self.goal
             {
                 return Some(node);
             }
             self.closed_list.insert(Rc::clone(&node));
+            println!("DEBUG::algo::resolve: closed list len: {}", self.closed_list.len());
+            println!("DEBUG::algo::resolve: open list len: {}", self.open_list.len());
+            println!("DEBUG::algo::resolve: heuristics: {:?}", node.borrow().state);
+            println!("DEBUG::algo::resolve: grid: \n{}", node.borrow().grid);
             for child in Node::generate_childs(node, self.column)
             {
                 if self.closed_list.contains(&child)

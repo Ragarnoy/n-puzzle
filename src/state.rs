@@ -98,6 +98,7 @@ mod tests
     {
         let small = State{h: 1, g: 1, f: 1};
         let big = State{h: 3, g: 1, f: 5};
+        assert!(small > big);
         assert_eq!(big.cmp(&small), Ordering::Less);
     }
     #[test]
@@ -105,6 +106,7 @@ mod tests
     {
         let small = State{h: 1, g: 1, f: 1};
         let big = State{h: 3, g: 1, f: 5};
+        assert!(small > big);
         assert_eq!(small.cmp(&big), Ordering::Greater);
     }
     #[test]
@@ -112,6 +114,7 @@ mod tests
     {
         let small = State{h: 1, g: 2, f: 5};
         let big = State{h: 3, g: 2, f: 5};
+        assert!(small > big);
         assert_eq!(big.cmp(&small), Ordering::Less);
     }
     #[test]
