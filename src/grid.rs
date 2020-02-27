@@ -91,10 +91,27 @@ impl Grid
         ret
     }
 
-    // fn manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
-    // {
-
-    // }
+    fn manhattan(&self, goal: &Self, col: u8) -> u16
+    {
+        let mut goal_cord: Coord = Coord { x:0, y:0};
+        let mut self_cord: Coord = Coord { x:0, y:0};
+        let mut ret: u16 = 0;
+        
+        ret = self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
+        {
+            if i != g
+            {
+                goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *g).unwrap().0 as u32, col);
+                self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *g).unwrap().0 as u32, col);
+                acc + ((goal_cord.x - self_cord.x) + (goal_cord.y - self_cord.y)).abs() as u16
+            }
+            else
+            {
+                acc
+            }
+        });
+        ret
+    }
 
     // fn linear_manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
     // {
