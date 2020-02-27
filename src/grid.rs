@@ -170,8 +170,14 @@ mod tests
     {
         let goal = Grid::new(vec!(1, 2, 3, 8, 0, 4, 7, 6, 5));
         let test = Grid::new(vec!(1, 2, 5, 3, 0, 6, 7, 4, 8));
-        let expected = 8;
+        let expected = 12;
 
+        assert_eq!(test.manhattan(&goal, 3), expected);
+        let expected = 2;
+        let test = Grid::new(vec!(1, 2, 3, 8, 0, 4, 7, 5, 6));
+        assert_eq!(test.manhattan(&goal, 3), expected);
+        let expected = 4;
+        let test = Grid::new(vec!(1, 2, 3, 8, 0, 4, 5, 7, 6));
         assert_eq!(test.manhattan(&goal, 3), expected);
     }
 }
