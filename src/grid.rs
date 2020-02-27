@@ -73,7 +73,7 @@ impl Grid
         [Move::Up, Move::Down, Move::Right, Move::Left].iter().filter_map(|&m| self.move_zero(m, col)).collect()
     }
 
-    pub fn manning(&self, goal: &Self) -> u16
+    pub fn manning(&self, goal: &Grid) -> u16
     {
         let mut ret:u16 = 0;
 
@@ -91,25 +91,28 @@ impl Grid
         ret
     }
 
-    fn manhattan(&self, goal: &Self, col: u8) -> u16
+    fn manhattan(&self, goal: &Grid, col: u8) -> u16
     {
-        let mut goal_cord: Coord = Coord { x:0, y:0};
-        let mut self_cord: Coord = Coord { x:0, y:0};
+        let mut goal_cord: Coord = Coord { x: 0, y: 0};
+        let mut self_cord: Coord = Coord { x: 0, y: 0};
         let mut ret: u16 = 0;
         
-        ret = self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
+        ret = self.map.iter().zip(goal.map.iter()).filter(|(i, j)| **i != 0 && **j != 0).fold(0, |acc, (i, g)| 
         {
+            goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
+            self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
+            println!("i -> {}                       g -> {}                             acc {}", i, g, acc);
+            println!("self = {:?}, goal = {:?} ==> diff = {}", self_cord, goal_cord, (goal_cord.x - self_cord.x).abs() + (goal_cord.y - self_cord.y).abs());
             if i != g
             {
-                goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *g).unwrap().0 as u32, col);
-                self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *g).unwrap().0 as u32, col);
-                acc + ((goal_cord.x - self_cord.x) + (goal_cord.y - self_cord.y)).abs() as u16
+                acc + ((goal_cord.x - self_cord.x).abs() + (goal_cord.y - self_cord.y).abs()) as u16
             }
             else
             {
                 acc
             }
         });
+        println!("dist = {}", ret);
         ret
     }
 
@@ -150,5 +153,25 @@ mod tests
         println!("{}", test);
         let test = Grid::new(vec!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0));
         println!("{}", test);
+    }
+
+    #[test]
+    fn hamming()
+    {
+        let goal = Grid::new(vec!(1, 2, 3, 8, 0, 4, 7, 6, 5));
+        let test = Grid::new(vec!(1, 2, 3, 4, 5, 6, 7, 8, 0));
+        let expected = 4;
+
+        assert_eq!(test.manning(&goal), expected);
+    }
+
+    #[test]
+    fn manhattan()
+    {
+        let goal = Grid::new(vec!(1, 2, 3, 8, 0, 4, 7, 6, 5));
+        let test = Grid::new(vec!(1, 2, 5, 3, 0, 6, 7, 4, 8));
+        let expected = 8;
+
+        assert_eq!(test.manhattan(&goal, 3), expected);
     }
 }
