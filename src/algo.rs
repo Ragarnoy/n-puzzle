@@ -5,6 +5,13 @@ use std::{
     cell::RefCell
 };
 
+pub enum heuristics
+{
+    hamming,
+    manhattan,
+    linear_man
+}
+
 pub struct Algo
 {
     open_list: BinaryHeap<Rc<RefCell<Node>>>,
