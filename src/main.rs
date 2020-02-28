@@ -10,15 +10,6 @@ mod algo;
 use clap::{Arg, App};
 use std::{path::Path, fs};
 
-fn check_result(input: Vec<u16>, lgth: u8) -> bool
-{
-    if input == puzzle_gen::summon_snail(lgth)
-    {
-        return true;
-    }
-    false
-}
-
 fn create_random_grid(lgth: u8) -> grid::Grid
 {
     grid::Grid::new(puzzle_gen::random_puzzle(lgth))
@@ -55,9 +46,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                 .author(crate_authors!())
                 .about(crate_description!())
                 .arg(Arg::with_name("input")
-                    .required(true)
+                    .conflicts_with("random")
                     .help("<file.txt> input"))
+                .arg(Arg::with_name("heuristic")
+                    .short("h")
+                    .help("Sets heuristic algorithm (hamming/manhattan/linear_manhattan) (manhattan by default)"))
                 .get_matches();
+
+    if matches.value_of("input").unwrap() != ""
+    {
+        //If non empty, check if file exists, if it doesn't, error, if it does, continue
+        //If empty, grid is random
+    }
 
     let content = fs::read_to_string(Path::new(matches.value_of("input").unwrap())).unwrap();
     let grid = parser(content)?;
