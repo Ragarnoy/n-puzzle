@@ -9,7 +9,7 @@ mod puzzle_gen;
 mod algo;
 use clap::{Arg, App};
 use std::{path::Path, fs};
-use grid::Grid;
+use grid::{Grid, HType};
 use node::Node;
 use state::State;
 use algo::Algo;
@@ -77,22 +77,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                     .conflicts_with("random")
                     .help("<file.txt> input"))
                 .arg(Arg::with_name("heuristic")
-                    .short("h")
-                    .help("Sets heuristic algorithm (hamming/manhattan/linear_manhattan) (manhattan by default)"))
+                    .required(false)
+                    .multiple(false)
+                    .help("<heuristic_name>"))
                 .get_matches();
 
-    if matches.value_of("input").unwrap() != ""
-    {
-        //If non empty, check if file exists, if it doesn't, error, if it does, continue
-        //If empty, grid is random
-    }
-
-    let content = fs::read_to_string(Path::new(matches.value_of("input").unwrap())).unwrap();
+    let content = fs::read_to_string(Path::new(matches.value_of("input").unwrap_or("")))?;
+    let h_type = HType::from_str_or_default(matches.value_of("heuristic"))?;
     let (nb_col, grid) = parser(content)?;
     let mut initial_node = Node::new(State::default(), grid);
     let goal = Grid::new(puzzle_gen::summon_snail(nb_col));
-    initial_node.update_state(&goal);
-    let mut algo = Algo::new(initial_node, goal, nb_col);
+    initial_node.update_state(&goal, h_type, nb_col);
+    let mut algo = Algo::new(initial_node, goal, h_type, nb_col);
     let result = algo.resolve();
     println!("{:#?}", result);
 

@@ -1,7 +1,7 @@
 use std::cmp::{Ordering, Ord};
 use std::rc::Rc;
 use std::cell::RefCell;
-use crate::{state::State, grid::Grid};
+use crate::{state::State, grid::{Grid, HType}};
 
 #[derive(Eq, Clone, Debug)]
 pub struct Node
@@ -62,8 +62,13 @@ impl Node
         ret
     }
 
-    pub fn update_state(&mut self, goal: &Grid)
+    pub fn update_state(&mut self, goal: &Grid, h_type: HType, col: u8)
     {
-        self.state.update(&self.grid, goal);
+        match h_type
+        {
+            HType::Manning => self.state.update_manning(&self.grid, goal),
+            HType::Manhattan => self.state.update_manhattan(&self.grid, goal, col),
+            HType::LinearManhattan => self.state.update_linear_manhattan(&self.grid, goal, col)
+        }
     }
 }

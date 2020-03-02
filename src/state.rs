@@ -82,9 +82,21 @@ impl State
         }
     }
     
-    pub fn update(&mut self, grid: &Grid, goal: &Grid)
+    pub fn update_manning(&mut self, grid: &Grid, goal: &Grid)
     {
         self.h = grid.manning(goal);
+        self.f = self.g + self.h as u32;
+    }
+    
+    pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid, col: u8)
+    {
+        self.h = grid.manhattan(goal, col);
+        self.f = self.g + self.h as u32;
+    }
+    
+    pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid, col: u8)
+    {
+        self.h = grid.linear_manhattan(goal, col);
         self.f = self.g + self.h as u32;
     }
 }

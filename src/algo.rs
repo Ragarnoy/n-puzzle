@@ -1,4 +1,7 @@
-use crate::{grid::Grid, node::Node};
+use crate::{
+    grid::{Grid, HType},
+    node::Node
+};
 use std::{
     collections::{BinaryHeap, BTreeSet},
     rc::Rc,
@@ -17,12 +20,13 @@ pub struct Algo
     open_list: BinaryHeap<Rc<RefCell<Node>>>,
     closed_list : BTreeSet<Rc<RefCell<Node>>>,
     goal: Grid,
-    column: u8
+    column: u8,
+    h_type: HType
 }
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, column: u8) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType, column: u8) -> Self
     {
         let mut open_list: BinaryHeap<Rc<RefCell<Node>>> = BinaryHeap::new();
         open_list.push(Rc::new(RefCell::new(initial_node)));
@@ -32,7 +36,8 @@ impl Algo
             open_list,
             closed_list: BTreeSet::new(),
             goal,
-            column
+            column,
+            h_type
         }
     }
 
@@ -40,7 +45,7 @@ impl Algo
     {
         while let Some(node) = self.open_list.pop()
         {
-            if node.borrow().grid == self.goal
+            if node.borrow().state.h == 0
             {
                 return Some(node);
             }
@@ -48,10 +53,14 @@ impl Algo
             println!("DEBUG::algo::resolve: closed list len: {}", self.closed_list.len());
             println!("DEBUG::algo::resolve: open list len: {}", self.open_list.len());
             println!("DEBUG::algo::resolve: heuristics: {:?}", node.borrow().state);
+            if !self.open_list.is_empty() {
+                println!("DEBUG::algo::resolve: higher f in open list: {}", self.open_list.iter().last().unwrap().borrow().state.f);
+                println!("DEBUG::algo::resolve: lesser f in open list: {}", self.open_list.peek().unwrap().borrow().state.f);
+            }
             println!("DEBUG::algo::resolve: grid: \n{}", node.borrow().grid);
             for child in Node::generate_childs(node, self.column)
             {
-                if self.closed_list.contains(&child)
+                if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)
                 {
                     continue;
                 }
@@ -71,7 +80,10 @@ impl Algo
                 else
                 {
                     // println!("DEBUG::algo::resolve::child: {:#?}", child);
-                    child.borrow_mut().update_state(&self.goal);
+                    child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
+                    if child.borrow().state.h == 0 {
+                        return Some(child);
+                    }
                     self.open_list.push(child)
                 }
             }
@@ -84,7 +96,7 @@ impl Algo
 mod tests
 {
     use crate::state::State;
-    use std::{collections::BinaryHeap, rc::Rc};
+    use std::{collections::{BinaryHeap, BTreeSet}, rc::Rc};
 
     #[test]
     fn test_binary_heap_sort()
@@ -102,5 +114,24 @@ mod tests
         assert_eq!(s1, bh.pop().unwrap());
         assert_eq!(s2, bh.pop().unwrap());
         assert_eq!(None, bh.pop());
+    }
+
+    #[test]
+    fn test_btree_set_storage()
+    {
+        let mut bts: BTreeSet<Rc<State>> = BTreeSet::new();
+        let b0 = Rc::new(State::new(0, 1, 1));
+        let b1 = Rc::new(State::new(1, 0, 1));
+        let b2 = Rc::new(State::new(0, 0, 0));
+        let b3 = Rc::new(State::new(0, 1, 1));
+
+        bts.insert(Rc::clone(&b0));
+        assert_eq!(1, bts.len());
+        bts.insert(Rc::clone(&b1));
+        assert_eq!(2, bts.len());
+        bts.insert(Rc::clone(&b2));
+        assert_eq!(3, bts.len());
+        bts.insert(Rc::clone(&b3));
+        assert_eq!(3, bts.len());
     }
 }

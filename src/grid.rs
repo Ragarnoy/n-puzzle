@@ -24,6 +24,37 @@ impl Move
     }
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum HType
+{
+    Manning,
+    Manhattan,
+    LinearManhattan
+}
+
+impl Default for HType
+{
+    fn default() -> Self
+    {
+        Self::Manning
+    }
+}
+
+impl HType
+{
+    pub fn from_str_or_default(input: Option<&str>) -> Result<Self, String>
+    {
+        match input
+        {
+            None => Ok(Self::default()),
+            Some("manning") => Ok(Self::Manning),
+            Some("manhattan") => Ok(Self::Manhattan),
+            Some("linear_manhattan") => Ok(Self::LinearManhattan),
+            Some(h) => Err(format!("This heuristic function does not exist: {}", h))
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Grid
 {
@@ -116,10 +147,10 @@ impl Grid
         ret
     }
 
-    // fn linear_manhattan(input: Vec<Vec<u16>>, goal: Vec<Vec<u16>>)
-    // {
-
-    // }
+    pub fn linear_manhattan(&self, goal: &Self, col: u8) -> u16
+    {
+        0
+    }
 }
 
 impl fmt::Display for Grid
