@@ -123,7 +123,7 @@ impl Grid
     {
         let mut goal_cord: Coord = Coord { x: 0, y: 0};
         let mut self_cord: Coord = Coord { x: 0, y: 0};
-        self.map.iter().zip(goal.map.iter()).filter(|(i, j)| **i != 0 && **j != 0).fold(0, |acc, (i, g)| 
+        self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
         {
             goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
             self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
@@ -197,6 +197,9 @@ mod tests
         assert_eq!(test.manhattan(&goal, 3), expected);
         let expected = 2;
         let test = Grid::new(vec!(1, 2, 3, 8, 0, 4, 7, 5, 6));
+        assert_eq!(test.manhattan(&goal, 3), expected);
+        let expected = 1;
+        let test = Grid::new(vec!(1, 0, 3, 8, 2, 4, 7, 6, 5));
         assert_eq!(test.manhattan(&goal, 3), expected);
         let expected = 4;
         let test = Grid::new(vec!(1, 2, 3, 8, 0, 4, 5, 7, 6));
