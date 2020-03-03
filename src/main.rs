@@ -9,22 +9,10 @@ mod puzzle_gen;
 mod algo;
 use clap::{Arg, App};
 use std::{path::Path, fs};
-<<<<<<< HEAD
 use grid::{Grid, HType};
 use node::Node;
 use state::State;
 use algo::Algo;
-=======
-
-fn check_result(input: Vec<u16>, lgth: u8) -> bool
-{
-    if input == puzzle_gen::create_snail_goal(lgth)
-    {
-        return true;
-    }
-    false
-}
->>>>>>> feature/snail_sort
 
 fn create_random_grid(lgth: u8) -> grid::Grid
 {
