@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     let h_type = HType::from_str_or_default(matches.value_of("heuristic"))?;
     let (nb_col, grid) = parser(content)?;
     let mut initial_node = Node::new(State::default(), grid);
-    let goal = Grid::new(puzzle_gen::summon_snail(nb_col));
+    let goal = Grid::new(puzzle_gen::create_snail_goal(nb_col));
     initial_node.update_state(&goal, h_type, nb_col);
     let mut algo = Algo::new(initial_node, goal, h_type, nb_col);
     let result = algo.resolve();
