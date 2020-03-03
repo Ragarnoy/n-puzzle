@@ -106,9 +106,7 @@ impl Grid
 
     pub fn manning(&self, goal: &Grid) -> u16
     {
-        let mut ret:u16 = 0;
-
-        ret = self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
+        self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
         {
             if i != g 
             {
@@ -118,22 +116,17 @@ impl Grid
             {
                 acc
             }
-        });
-        ret
+        })
     }
 
     fn manhattan(&self, goal: &Grid, col: u8) -> u16
     {
         let mut goal_cord: Coord = Coord { x: 0, y: 0};
         let mut self_cord: Coord = Coord { x: 0, y: 0};
-        let mut ret: u16 = 0;
-        
-        ret = self.map.iter().zip(goal.map.iter()).filter(|(i, j)| **i != 0 && **j != 0).fold(0, |acc, (i, g)| 
+        self.map.iter().zip(goal.map.iter()).filter(|(i, j)| **i != 0 && **j != 0).fold(0, |acc, (i, g)| 
         {
             goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
             self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
-            println!("i -> {}                       g -> {}                             acc {}", i, g, acc);
-            println!("self = {:?}, goal = {:?} ==> diff = {}", self_cord, goal_cord, (goal_cord.x - self_cord.x).abs() + (goal_cord.y - self_cord.y).abs());
             if i != g
             {
                 acc + ((goal_cord.x - self_cord.x).abs() + (goal_cord.y - self_cord.y).abs()) as u16
@@ -142,9 +135,7 @@ impl Grid
             {
                 acc
             }
-        });
-        println!("dist = {}", ret);
-        ret
+        })
     }
 
     pub fn linear_manhattan(&self, goal: &Self, col: u8) -> u16

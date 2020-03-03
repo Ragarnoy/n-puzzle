@@ -8,8 +8,6 @@ pub struct State
     pub f: u32,
 }
 
-// TODO Generate h from grid method that executes heuristic function
-
 impl PartialOrd for State
 {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering>

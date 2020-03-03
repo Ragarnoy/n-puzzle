@@ -3,22 +3,15 @@ use crate::{
     node::Node
 };
 use std::{
-    collections::{BinaryHeap, BTreeSet},
+    collections::BinaryHeap,
     rc::Rc,
     cell::RefCell
 };
 
-pub enum heuristics
-{
-    hamming,
-    manhattan,
-    linear_man
-}
-
 pub struct Algo
 {
     open_list: BinaryHeap<Rc<RefCell<Node>>>,
-    closed_list : BTreeSet<Rc<RefCell<Node>>>,
+    closed_list : Vec<Rc<RefCell<Node>>>,
     goal: Grid,
     column: u8,
     h_type: HType
@@ -49,15 +42,7 @@ impl Algo
             {
                 return Some(node);
             }
-            self.closed_list.insert(Rc::clone(&node));
-            println!("DEBUG::algo::resolve: closed list len: {}", self.closed_list.len());
-            println!("DEBUG::algo::resolve: open list len: {}", self.open_list.len());
-            println!("DEBUG::algo::resolve: heuristics: {:?}", node.borrow().state);
-            if !self.open_list.is_empty() {
-                println!("DEBUG::algo::resolve: higher f in open list: {}", self.open_list.iter().last().unwrap().borrow().state.f);
-                println!("DEBUG::algo::resolve: lesser f in open list: {}", self.open_list.peek().unwrap().borrow().state.f);
-            }
-            println!("DEBUG::algo::resolve: grid: \n{}", node.borrow().grid);
+            self.closed_list.push(Rc::clone(&node));
             for child in Node::generate_childs(node, self.column)
             {
                 if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)

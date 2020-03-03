@@ -37,12 +37,14 @@ fn parser(content: String) -> Result<(u8, grid::Grid), String>
     for line in content_lines
     {
         let mut invalid_token = false;
-        let mut parsed_line: Vec<u16> = line.split(char::is_whitespace).map(|x| {
+        println!("DEBUG::main::parser: current line: {}", line);
+        let mut parsed_line: Vec<u16> = line.split_whitespace().map(|x| {
             let res = x.parse::<u16>();
             if res.is_err()
             {
                 invalid_token = true;
             }
+            println!("DEBUG::main::parser: current token in line: [{}]", x);
             res.unwrap_or(0)
         }).collect();
         if invalid_token
