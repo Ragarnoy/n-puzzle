@@ -49,6 +49,7 @@ impl Algo
                 {
                     continue;
                 }
+                // Try to swap the two conditions below (and do thefor loop directly, no if around it)
                 else if self.open_list.iter().any(|n| *n == child)
                 {
                     if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
