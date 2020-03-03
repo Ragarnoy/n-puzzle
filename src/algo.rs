@@ -27,7 +27,7 @@ impl Algo
         Algo
         {
             open_list,
-            closed_list: BTreeSet::new(),
+            closed_list: Vec::new(),
             goal,
             column,
             h_type

@@ -119,7 +119,7 @@ impl Grid
         })
     }
 
-    fn manhattan(&self, goal: &Grid, col: u8) -> u16
+    pub fn manhattan(&self, goal: &Grid, col: u8) -> u16
     {
         let mut goal_cord: Coord = Coord { x: 0, y: 0};
         let mut self_cord: Coord = Coord { x: 0, y: 0};
