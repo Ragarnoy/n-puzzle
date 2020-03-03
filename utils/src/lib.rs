@@ -21,6 +21,60 @@ pub fn remove_comment_by_line(input: &str, start_with: &str) -> Vec<String>
 	}).collect()
 }
 
+pub fn snail_sort(input: &Vec<u16>, maxabs: u8) -> Vec<u16>
+{
+	let mut output: Vec<u16> = (0..maxabs as u16 * maxabs as u16).collect();
+	let mut dir = coord::Coord {x: 1, y: 0};
+	let mut cur = coord::Coord {x: 0, y: 0};
+
+	let mut min = coord::Coord {x: 0, y: 0};
+	let mut max = coord::Coord {x: maxabs as i16 - 1, y: maxabs as i16 - 1};
+
+	println!("IN\n{:#?}", input);
+	for n in input.iter()
+	{
+		println!("X: {}, Y: {} -> {}", cur.x, cur.y, input[cur.to_abs(maxabs) as usize]);
+		output[cur.to_abs(maxabs) as usize] = *n;
+		cur.x += dir.x;
+		cur.y += dir.y;
+
+		if cur.x > max.x
+		{
+			dir.x = 0;
+			dir.y = 1;
+			min.y += 1;
+			cur.x = max.x;
+			cur.y += 1;
+		}
+		else if cur.x < min.x
+		{
+			dir.x = 0;
+			dir.y = -1;
+			max.y -= 1;
+			cur.x = min.x;
+			cur.y -= 1;
+		}
+		else if cur.y > max.y
+		{
+			dir.x = -1;
+			dir.y = 0; 
+			max.x -= 1; 
+			cur.y = max.y; 
+			cur.x -= 1;
+		}
+		else if cur.y < min.y
+		{
+			dir.x = 1; 
+			dir.y = 0; 
+			min.x += 1; 
+			cur.y = min.y; 
+			cur.x += 1;
+		}
+	}
+	println!("OUT\n{:#?}", output);
+	output
+}
+
 #[cfg(test)]
 mod tests
 {
@@ -90,5 +144,32 @@ mod tests
 			assert!(!result.is_empty());
 			assert_eq!(result, expect);
 		}
+	}
+
+	#[test]
+	fn snail_three_by_three()
+	{
+		use crate::snail_sort;
+		let mut test_vec: Vec<u16> = (1..9).collect();
+		test_vec.push(0);
+		assert_eq!(snail_sort(&test_vec, 3), vec![1, 2, 3, 8, 0, 4, 7, 6, 5]);
+	}
+
+	#[test]
+	fn snail_four_by_four()
+	{
+		use crate::snail_sort;
+		let mut test_vec: Vec<u16> = (1..16).collect();
+		test_vec.push(0);
+		assert_eq!(snail_sort(&test_vec, 4), vec![1, 2, 3, 4, 12, 13, 14, 5, 11, 0, 15, 6, 10, 9, 8, 7]);
+	}
+
+	#[test]
+	fn snail_five_by_five()
+	{
+		use crate::snail_sort;
+		let mut test_vec: Vec<u16> = (1..25).collect();
+		test_vec.push(0);
+		assert_eq!(snail_sort(&test_vec, 5), vec![1, 2, 3, 4, 5,16, 17, 18, 19, 6, 15, 24, 0, 20, 7, 14, 23, 22, 21, 8, 13, 12, 11, 10, 9]);
 	}
 }
