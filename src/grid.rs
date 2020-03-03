@@ -55,7 +55,7 @@ impl HType
     }
 }
 
-#[derive(Eq, PartialEq, Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug, Hash)]
 pub struct Grid
 {
     map: Vec<u16>,

@@ -3,7 +3,7 @@ use crate::{
     node::Node
 };
 use std::{
-    collections::BinaryHeap,
+    collections::{BinaryHeap, HashSet},
     rc::Rc,
     cell::RefCell
 };
@@ -38,7 +38,7 @@ impl Algo
     {
         while let Some(node) = self.open_list.pop()
         {
-            if node.borrow().state.h == 0
+            if node.borrow().state.h == 0 && node.borrow().grid == self.goal
             {
                 return Some(node);
             }
@@ -49,8 +49,12 @@ impl Algo
                 {
                     continue;
                 }
-                else if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                else if self.open_list.iter().any(|n| *n == child)
                 {
+                    if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                    {
+                        continue;
+                    }
                     let child_g = child.borrow().state.g;
                     let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
 
@@ -64,7 +68,6 @@ impl Algo
                 }
                 else
                 {
-                    // println!("DEBUG::algo::resolve::child: {:#?}", child);
                     child.borrow_mut().update_state(&self.goal, self.h_type);
                     if child.borrow().state.h == 0 {
                         return Some(child);

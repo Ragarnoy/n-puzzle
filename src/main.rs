@@ -158,7 +158,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     initial_node.update_state(&goal, h_type);
     let mut algo = Algo::new(initial_node, goal, h_type, lines);
     let result = algo.resolve();
-    println!("{:#?}", result);
+    println!("{}", result.unwrap().borrow().grid);
 
     Ok(())
 }
