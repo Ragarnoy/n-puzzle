@@ -194,7 +194,11 @@ impl fmt::Display for Grid
         let mut result = ();
         for (i, x) in self.map.iter().enumerate()
         {
-            result = write!(f, "\t{}", x)?;
+            result = match x
+            {
+                0 => write!(f, "\t{}", "_")?,
+                n => write!(f, "\t{}", n)?
+            };
             if (i + 1) % col as usize == 0 && i != 0
             {
                 result = write!(f, "{}", "\n\n")?;
