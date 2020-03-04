@@ -14,7 +14,9 @@ pub struct Algo
     closed_list : Vec<Rc<RefCell<Node>>>,
     goal: Grid,
     column: u8,
-    h_type: HType
+    h_type: HType,
+    nb_nodes_wm: usize,
+    nb_poped: usize
 }
 
 impl Algo
@@ -30,14 +32,27 @@ impl Algo
             closed_list: Vec::new(),
             goal,
             column,
-            h_type
+            h_type,
+            nb_nodes_wm: 0,
+            nb_poped: 0
         }
+    }
+
+    pub fn get_nb_poped(&self) -> usize
+    {
+        self.nb_poped
+    }
+
+    pub fn get_nb_nodes_wm(&self) -> usize
+    {
+        self.nb_nodes_wm
     }
 
     pub fn resolve(&mut self) -> Option<Rc<RefCell<Node>>>
     {
         while let Some(node) = self.open_list.pop()
         {
+            self.nb_poped += 1;
             if node.borrow().state.h == 0 && node.borrow().grid == self.goal
             {
                 return Some(node);
@@ -75,6 +90,11 @@ impl Algo
                     }
                     self.open_list.push(child)
                 }
+            }
+            let max_states = self.open_list.len() + self.closed_list.len();
+            if self.nb_nodes_wm < max_states
+            {
+                self.nb_nodes_wm = max_states;
             }
         }
         None

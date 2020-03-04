@@ -31,9 +31,27 @@ fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
 fn parser(content: String) -> Result<grid::Grid, String>
 {
     let mut ret: Vec<u16> = Vec::new();
-    let content_lines = utils::remove_comment_by_line(&content, "#");
-    let nb_lines = content_lines.len();
+    let mut content_lines = utils::remove_comment_by_line(&content, "#");
+    let mut nb_lines = content_lines.len();
 
+    let nb_col = if nb_lines > 0
+    {
+        let first = content_lines.remove(0);
+        nb_lines -= 1;
+        match first.parse::<usize>()
+        {
+            Ok(col) => col,
+            Err(_) => return Err(format!("Invalid puzzle size: [{}]", first))
+        }
+    }
+    else
+    {
+        return Err(format!("There is no way we can resolve an empty puzzle dummy!"));
+    };
+    if nb_col != nb_lines
+    {
+        return Err(format!("The size definition and the number of line of the puzzle don't match"));
+    }
     for line in content_lines
     {
         let mut invalid_token = false;
@@ -101,6 +119,20 @@ fn expect_file(file: String) -> Result<(), String>
     Err(String::from("Path is invalid/does not exist."))
 }
 
+fn error_handler<T, E>(from: Result<T, E>) -> T
+where E:
+    std::fmt::Display
+{
+    match from
+    {
+        Ok(res) => res,
+        Err(e) => {
+            eprintln!("ERROR: {}", e);
+            std::process::exit(42);
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> 
 {
     let matches = App::new("N-Puzzle")
@@ -131,36 +163,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                                     "linear_manhattan"]))
                 .get_matches();
 
-    let content: String;
-    let grid;
-    let lines: u8;
-    if matches.value_of("input").is_some()
+    // let content: String;
+    let grid = if matches.value_of("input").is_some()
     {
-        content = fs::read_to_string(Path::new(matches.value_of("input").expect("Invalid input")))?;
-        grid = parser(content)?;
-        lines = grid.get_lines();
-    }
-    else if matches.value_of("random").is_some()
-    {
-        lines = matches.value_of("random").unwrap().parse().unwrap();
-        grid = Grid::new(puzzle_gen::random_puzzle(lines), lines);
-        // TODO Make solvable lol
-        println!("{}", grid);
+        let content = error_handler(fs::read_to_string(Path::new(matches.value_of("input").expect("Invalid input"))));
+        error_handler(parser(content))
     }
     else
     {
-        // impossible
-        panic!("bruh wtf");
-    }
-    let h_type = HType::from_str_or_default(matches.value_of("heuristic"))?;
+        let lines = matches.value_of("random").unwrap().parse().unwrap();
+        Grid::new(puzzle_gen::random_puzzle(lines), lines)
+        // TODO Make solvable lol
+        // println!("{}", grid);
+    };
+    let lines = grid.get_lines();
+    let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
+    // let (nb_col, grid) = error_handler(parser(content));
     let mut initial_node = Node::new(State::default(), grid);
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
     initial_node.update_state(&goal, h_type);
-    let mut algo = Algo::new(initial_node, goal, h_type, lines);
-    let result = algo.resolve();
-    println!("{}", result.unwrap().borrow().grid);
-
-    Ok(())
+    let mut algo = Algo::new(initial_node.clone(), goal, h_type, lines);
+    match algo.resolve()
+    {
+        Some(solution) =>
+        {
+            println!("A solution was found for the initial state you gave\nHere are the results:\n");
+            println!("Amount of moves requiered:\t{}\n", solution.borrow().state.g);
+            println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_nb_poped());
+            println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)\n", algo.get_nb_nodes_wm());
+            println!("Steps to reach the goal:");
+            solution.borrow().print_steps();
+            Ok(())
+        },
+        None => Err(format!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}", initial_node.grid, goal).into())
+    }
 }
 
 
