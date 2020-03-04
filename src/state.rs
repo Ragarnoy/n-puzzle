@@ -86,15 +86,15 @@ impl State
         self.f = self.g + self.h as u32;
     }
     
-    pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid, col: u8)
+    pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid)
     {
-        self.h = grid.manhattan(goal, col);
+        self.h = grid.manhattan(goal);
         self.f = self.g + self.h as u32;
     }
     
-    pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid, col: u8)
+    pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid)
     {
-        self.h = grid.linear_manhattan(goal, col);
+        self.h = grid.linear_manhattan(goal);
         self.f = self.g + self.h as u32;
     }
 }

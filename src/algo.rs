@@ -43,7 +43,7 @@ impl Algo
                 return Some(node);
             }
             self.closed_list.push(Rc::clone(&node));
-            for child in Node::generate_childs(node, self.column)
+            for child in Node::generate_childs(node)
             {
                 if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)
                 {
@@ -65,7 +65,7 @@ impl Algo
                 else
                 {
                     // println!("DEBUG::algo::resolve::child: {:#?}", child);
-                    child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
+                    child.borrow_mut().update_state(&self.goal, self.h_type);
                     if child.borrow().state.h == 0 {
                         return Some(child);
                     }

@@ -28,7 +28,7 @@ fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
     input.len() == len && *input.last().unwrap() == len as u16 - 1  && *input.first().unwrap() == 0
 }
 
-fn parser(content: String) -> Result<(u8, grid::Grid), String>
+fn parser(content: String) -> Result<grid::Grid, String>
 {
     let mut ret: Vec<u16> = Vec::new();
     let content_lines = utils::remove_comment_by_line(&content, "#");
@@ -61,7 +61,7 @@ fn parser(content: String) -> Result<(u8, grid::Grid), String>
     {
         // No need to clone `ret` here because it will be dropped at the end
         // of this function so we can safely give ownership to the new `Grid`.
-        Ok((nb_lines as u8, Grid::new(ret, nb_lines as u8)))
+        Ok((Grid::new(ret, nb_lines as u8)))
     }
     else
     {
@@ -78,19 +78,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                 .arg(Arg::with_name("input")
                     .conflicts_with("random")
                     .help("<file.txt> input"))
+                .arg(Arg::with_name("random")
+                    .short("r")
+                    .number_of_values(1)
+                    .conflicts_with("input")
+                    .help("-r <3-10>"))
                 .arg(Arg::with_name("heuristic")
                     .required(false)
                     .multiple(false)
                     .help("<heuristic_name>"))
                 .get_matches();
 
-    let content = fs::read_to_string(Path::new(matches.value_of("input").unwrap_or("")))?;
+    let content: String;
+    let grid;
+    let mut lines: u8;
+    if matches.value_of("input").is_some()
+    {
+        content = fs::read_to_string(Path::new(matches.value_of("input").expect("Invalid input")))?;
+        grid = parser(content)?;
+    }
+    else if matches.value_of("random").is_some()
+    {
+        let buf = matches.value_of("random").unwrap_or("0");
+        if !buf.parse::<u8>().is_ok() && buf.parse::<u8>().unwrap() > 2 && buf.parse::<u8>().unwrap() < 15
+        {
+            panic!("Expected number between 3 and 15!")
+        }
+        lines = matches.value_of("random").unwrap().parse().unwrap();
+        grid = Grid::new(puzzle_gen::random_puzzle(lines), lines);
+    }
+    else
+    {
+        panic!("bruh wtf");
+    }
+    lines = grid.get_lines();
     let h_type = HType::from_str_or_default(matches.value_of("heuristic"))?;
-    let (nb_col, grid) = parser(content)?;
     let mut initial_node = Node::new(State::default(), grid);
-    let goal = Grid::new(puzzle_gen::create_snail_goal(nb_col), nb_col as u8);
-    initial_node.update_state(&goal, h_type, nb_col);
-    let mut algo = Algo::new(initial_node, goal, h_type, nb_col);
+    let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
+    initial_node.update_state(&goal, h_type);
+    let mut algo = Algo::new(initial_node, goal, h_type, lines);
     let result = algo.resolve();
     println!("{:#?}", result);
 

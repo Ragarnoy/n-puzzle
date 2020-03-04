@@ -75,23 +75,28 @@ impl Grid
         }
     }
 
+    pub fn get_lines(&self) -> u8
+    {
+        self.lines
+    }
+
     pub fn get_map(&self) -> Vec<u16>
     {
         self.map.clone()
     }
 
-    pub fn move_zero(&self, mov: Move, col: u8) -> Option<Self>
+    pub fn move_zero(&self, mov: Move) -> Option<Self>
     {
-        let mut z_pos = Coord::from_abs(self.z_pos as u32, col);
+        let mut z_pos = Coord::from_abs(self.z_pos as u32, self.lines);
         let mut map = self.map.clone();
 
         mov.apply(&mut z_pos);
-        if z_pos.is_out_of_table(col)
+        if z_pos.is_out_of_table(self.lines)
         {
             return None;
         }
 
-        let z_pos = z_pos.to_abs(col);
+        let z_pos = z_pos.to_abs(self.lines);
         map[self.z_pos as usize] = map[z_pos as usize];
         map[z_pos as usize] = 0;
         Some(Self
@@ -102,9 +107,9 @@ impl Grid
         })
     }
 
-    pub fn move_all_possible(&self, col: u8) -> Vec<Self>
+    pub fn move_all_possible(&self) -> Vec<Self>
     {
-        [Move::Up, Move::Down, Move::Right, Move::Left].iter().filter_map(|&m| self.move_zero(m, col)).collect()
+        [Move::Up, Move::Down, Move::Right, Move::Left].iter().filter_map(|&m| self.move_zero(m)).collect()
     }
 
     pub fn manning(&self, goal: &Grid) -> u16
@@ -122,12 +127,12 @@ impl Grid
         })
     }
 
-    pub fn manhattan(&self, goal: &Grid, col: u8) -> u16
+    pub fn manhattan(&self, goal: &Grid) -> u16
     {
         self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
         {
-            let goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
-            let self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, col);
+            let goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, self.lines);
+            let self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, self.lines);
             if i != g
             {
                 acc + ((goal_cord.x - self_cord.x).abs() + (goal_cord.y - self_cord.y).abs()) as u16
@@ -141,7 +146,6 @@ impl Grid
 
     fn check_misplaced(from: &Grid, goal: &Grid) -> Vec<(Coord, Coord)>
     {
-        let mut ret: Vec<(Coord, Coord)> = Vec::new();
         from.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).filter_map(|(i, g)| 
         {
             let goal_cord = Coord::from_abs(goal.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, from.lines);
@@ -157,10 +161,9 @@ impl Grid
         }).collect()
     }
 
-    pub fn linear_conflict(&self, goal: &Grid, col: u8) -> u16
+    pub fn linear_conflict(&self, goal: &Grid) -> u16
     {
         let mut ret: u16 = 0;
-        let mut goal_diff: u16;
         let mut conflict: Vec<(Coord, Coord)> = Grid::check_misplaced(self, goal).into_iter().filter(|(from, goal)| from.x == goal.x || from.y == goal.y).rev().collect();
 
         while let Some((f, g)) = conflict.pop()
@@ -176,9 +179,9 @@ impl Grid
         ret
     }
 
-    pub fn linear_manhattan(&self, goal: &Grid, col: u8) -> u16
+    pub fn linear_manhattan(&self, goal: &Grid) -> u16
     {
-        self.manhattan(goal, col) + self.linear_conflict(goal, col) * 2
+        self.manhattan(goal) + self.linear_conflict(goal) * 2
     }
 }
 
@@ -230,18 +233,21 @@ mod tests
     {
         let goal = Grid::new(vec!(1, 2, 3, 8, 0, 4, 7, 6, 5), 3);
         let test = Grid::new(vec!(1, 2, 5, 3, 0, 6, 7, 4, 8), 3);
-        let expected = 12;
 
-        assert_eq!(test.manhattan(&goal, 3), expected);
+        let expected = 12;
+        assert_eq!(test.manhattan(&goal), expected);
+
         let expected = 2;
         let test = Grid::new(vec!(1, 2, 3, 8, 0, 4, 7, 5, 6), 3);
-        assert_eq!(test.manhattan(&goal, 3), expected);
+        assert_eq!(test.manhattan(&goal), expected);
+
         let expected = 1;
         let test = Grid::new(vec!(1, 0, 3, 8, 2, 4, 7, 6, 5), 3);
-        assert_eq!(test.manhattan(&goal, 3), expected);
+        assert_eq!(test.manhattan(&goal), expected);
+
         let expected = 4;
         let test = Grid::new(vec!(1, 2, 3, 8, 0, 4, 5, 7, 6), 3);
-        assert_eq!(test.manhattan(&goal, 3), expected);
+        assert_eq!(test.manhattan(&goal), expected);
     }
 
     #[test]
@@ -266,21 +272,21 @@ mod tests
                                 3, 1, 2, 
                                 8, 0, 4, 
                                 7, 6, 5), 3);
-        assert_eq!(test.linear_conflict(&goal, 3), 2);
+        assert_eq!(test.linear_conflict(&goal), 2);
         let test = Grid::new(vec!(
                                 8, 2, 3, 
                                 7, 0, 4, 
                                 1, 6, 5), 3);
-        assert_eq!(test.linear_conflict(&goal, 3), 2);
+        assert_eq!(test.linear_conflict(&goal), 2);
         let test = Grid::new(vec!(
                                 8, 2, 4, 
                                 7, 0, 5, 
                                 1, 6, 3), 3);
-        assert_eq!(test.linear_conflict(&goal, 3), 4);
+        assert_eq!(test.linear_conflict(&goal), 4);
         let test = Grid::new(vec!(
                                 8, 6, 4, 
                                 7, 0, 5, 
                                 1, 2, 3), 3);
-        assert_eq!(test.linear_conflict(&goal, 3), 5);
+        assert_eq!(test.linear_conflict(&goal), 5);
     }
 }

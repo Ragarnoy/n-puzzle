@@ -47,10 +47,10 @@ impl Node
         }
     }
 
-    pub fn generate_childs(node: Rc<RefCell<Self>>, col: u8) -> Vec<Rc<RefCell<Node>>>
+    pub fn generate_childs(node: Rc<RefCell<Self>>) -> Vec<Rc<RefCell<Node>>>
     {
         let mut ret:Vec<Rc<RefCell<Node>>> = Vec::new();
-        for grid in node.borrow().grid.move_all_possible(col)
+        for grid in node.borrow().grid.move_all_possible()
         {
             ret.push(Rc::new(RefCell::new(Node
             {
@@ -62,13 +62,13 @@ impl Node
         ret
     }
 
-    pub fn update_state(&mut self, goal: &Grid, h_type: HType, col: u8)
+    pub fn update_state(&mut self, goal: &Grid, h_type: HType)
     {
         match h_type
         {
             HType::Manning => self.state.update_manning(&self.grid, goal),
-            HType::Manhattan => self.state.update_manhattan(&self.grid, goal, col),
-            HType::LinearManhattan => self.state.update_linear_manhattan(&self.grid, goal, col)
+            HType::Manhattan => self.state.update_manhattan(&self.grid, goal),
+            HType::LinearManhattan => self.state.update_linear_manhattan(&self.grid, goal)
         }
     }
 }
