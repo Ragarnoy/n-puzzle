@@ -11,12 +11,12 @@ use std::{
 pub struct Algo
 {
     open_list: BinaryHeap<Rc<RefCell<Node>>>,
-    closed_list: Vec<Rc<RefCell<Node>>>,
+    closed_list : Vec<Rc<RefCell<Node>>>,
+    best: Option<Rc<RefCell<Node>>>,
     goal: Grid,
     column: u8,
     h_type: HType,
-    nb_nodes_wm: usize,
-    nb_popped: usize
+    limit: u32
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -59,29 +59,28 @@ impl Algo
         {
             open_list,
             closed_list: Vec::new(),
+            best: None,
             goal,
             column,
             h_type,
-            nb_nodes_wm: 0,
-            nb_popped: 0
+            limit: 5
         }
     }
 
-    pub fn get_nb_popped(&self) -> usize
-    {
-        self.nb_popped
-    }
+    // pub fn get_nb_poped(&self) -> usize
+    // {
+    //     self.nb_poped
+    // }
 
-    pub fn get_nb_nodes_wm(&self) -> usize
-    {
-        self.nb_nodes_wm
-    }
+    // pub fn get_nb_nodes_wm(&self) -> usize
+    // {
+    //     self.nb_nodes_wm
+    // }
 
     pub fn resolve(&mut self) -> Option<Rc<RefCell<Node>>>
     {
         while let Some(node) = self.open_list.pop()
         {
-            self.nb_popped += 1;
             if node.borrow().state.h == 0 && node.borrow().grid == self.goal
             {
                 return Some(node);
@@ -93,41 +92,95 @@ impl Algo
                 {
                     continue;
                 }
-                // Try to swap the two conditions below (and do thefor loop directly, no if around it)
-                else if self.open_list.iter().any(|n| *n == child)
+                if child.borrow().state.g > self.limit
                 {
-                    if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                    if let Some(x) = self.best.as_ref()
                     {
-                        continue;
+                        if x.borrow().state.f > child.borrow().state.f
+                        {
+                            child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
+                            self.best = Some(Rc::clone(&child));
+                        }
                     }
-                    let child_g = child.borrow().state.g;
-                    let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
-
-                    for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                    else
                     {
-                        let new_f = node.borrow().state.h as u32 + child_g;
-                        node.borrow_mut().state.g = child_g;
-                        node.borrow_mut().state.f = new_f;
-                        node.borrow_mut().parent = Some(Rc::clone(&child_parent));
+                        child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
+                        self.best = Some(Rc::clone(&child));
                     }
                 }
+                // else if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                // {
+                //     let child_g = child.borrow().state.g;
+                //     let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
+
+                //     for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                //     {
+                //         let new_f = node.borrow().state.h as u32 + child_g;
+                //         node.borrow_mut().state.g = child_g;
+                //         node.borrow_mut().state.f = new_f;
+                //         node.borrow_mut().parent = Some(Rc::clone(&child_parent));
+                //     }
+                // }
                 else
                 {
-                    child.borrow_mut().update_state(&self.goal, self.h_type);
-                    if child.borrow().state.h == 0 {
-                        return Some(child);
-                    }
+                    child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
+                    // if child.borrow().state.h == 0 {
+                    //     return Some(child);
+                    // }
                     self.open_list.push(child)
                 }
             }
-            let max_states = self.open_list.len() + self.closed_list.len();
-            if self.nb_nodes_wm < max_states
+            if self.open_list.is_empty() && self.best.is_some()
             {
-                self.nb_nodes_wm = max_states;
+                println!("child.state: {:#?}", self.best.as_ref().unwrap().borrow().state);
+                println!("child.state:\n{}", self.best.as_ref().unwrap().borrow().grid);
+                self.open_list.push(Rc::clone(self.best.as_ref().unwrap()));
+                self.limit += 1;
             }
         }
         None
     }
+
+    // pub fn resolve(&mut self) -> Option<Rc<RefCell<Node>>>
+    // {
+    //     while let Some(node) = self.open_list.pop()
+    //     {
+    //         if node.borrow().state.h == 0
+    //         {
+    //             return Some(node);
+    //         }
+    //         self.closed_list.push(Rc::clone(&node));
+    //         for child in Node::generate_childs(node, self.column)
+    //         {
+    //             if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)
+    //             {
+    //                 continue;
+    //             }
+    //             else if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+    //             {
+    //                 let child_g = child.borrow().state.g;
+    //                 let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
+
+    //                 for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
+    //                 {
+    //                     let new_f = node.borrow().state.h as u32 + child_g;
+    //                     node.borrow_mut().state.g = child_g;
+    //                     node.borrow_mut().state.f = new_f;
+    //                     node.borrow_mut().parent = Some(Rc::clone(&child_parent));
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
+    //                 if child.borrow().state.h == 0 {
+    //                     return Some(child);
+    //                 }
+    //                 self.open_list.push(child)
+    //             }
+    //         }
+    //     }
+    //     None
+    // }
 }
 
 #[cfg(test)]
