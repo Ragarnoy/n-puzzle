@@ -47,7 +47,7 @@ impl HType
         match input
         {
             None => Ok(Self::default()),
-            Some("manning") => Ok(Self::Manning),
+            Some("hamming") => Ok(Self::Manning),
             Some("manhattan") => Ok(Self::Manhattan),
             Some("linear_manhattan") => Ok(Self::LinearManhattan),
             Some(h) => Err(format!("This heuristic function does not exist: {}", h))

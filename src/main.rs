@@ -69,6 +69,22 @@ fn parser(content: String) -> Result<grid::Grid, String>
     }
 }
 
+fn expect_integer(nbr: String) -> Result<(), String>
+{
+    if nbr.parse::<u8>().is_ok()
+    {
+        if nbr.parse::<u8>().unwrap() > 2 && nbr.parse::<u8>().unwrap() < 16
+        {
+            return Ok(())
+        }
+        else
+        {
+            return Err(String::from("The number must be between 2 and 16"))
+        }
+    }
+    Err(String::from("Expected a number"))
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> 
 {
     let matches = App::new("N-Puzzle")
@@ -77,15 +93,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                 .about(crate_description!())
                 .arg(Arg::with_name("input")
                     .conflicts_with("random")
+                    .index(1)
+                    .required(true)
+                    .number_of_values(1)
                     .help("<file.txt> input"))
                 .arg(Arg::with_name("random")
                     .short("r")
                     .number_of_values(1)
                     .conflicts_with("input")
-                    .help("-r <3-10>"))
+                    .validator(expect_integer)
+                    .help("-r <3-16>"))
                 .arg(Arg::with_name("heuristic")
+                    .short("e")
+                    .long("heuristic")
                     .required(false)
-                    .multiple(false)
+                    .number_of_values(1)
+                    .possible_values(&["hamming", "manhattan", "linear_manhattan"])
                     .help("<heuristic_name>"))
                 .get_matches();
 
@@ -99,16 +122,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     }
     else if matches.value_of("random").is_some()
     {
-        let buf = matches.value_of("random").unwrap_or("0");
-        if !buf.parse::<u8>().is_ok() && buf.parse::<u8>().unwrap() > 2 && buf.parse::<u8>().unwrap() < 15
-        {
-            panic!("Expected number between 3 and 15!")
-        }
         lines = matches.value_of("random").unwrap().parse().unwrap();
         grid = Grid::new(puzzle_gen::random_puzzle(lines), lines);
+        // TODO Make solvable lol
+        println!("{}", grid);
     }
     else
     {
+        // impossible
         panic!("bruh wtf");
     }
     lines = grid.get_lines();
