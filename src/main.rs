@@ -188,7 +188,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         Some(solution) =>
         {
             println!("A solution was found for the initial state you gave\nHere are the results:\n");
-            println!("Amount of moves requiered:\t{}\n", solution.borrow().state.g);
+            println!("Amount of moves required:\t{}\n", solution.borrow().state.g);
             println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_nb_poped());
             println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)\n", algo.get_nb_nodes_wm());
             println!("Steps to reach the goal:");
