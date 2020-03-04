@@ -30,10 +30,8 @@ pub fn snail_sort(input: &Vec<u16>, maxabs: u8) -> Vec<u16>
 	let mut min = coord::Coord {x: 0, y: 0};
 	let mut max = coord::Coord {x: maxabs as i16 - 1, y: maxabs as i16 - 1};
 
-	println!("IN\n{:#?}", input);
 	for n in input.iter()
 	{
-		println!("X: {}, Y: {} -> {}", cur.x, cur.y, input[cur.to_abs(maxabs) as usize]);
 		output[cur.to_abs(maxabs) as usize] = *n;
 		cur.x += dir.x;
 		cur.y += dir.y;
@@ -71,7 +69,6 @@ pub fn snail_sort(input: &Vec<u16>, maxabs: u8) -> Vec<u16>
 			cur.x += 1;
 		}
 	}
-	println!("OUT\n{:#?}", output);
 	output
 }
 

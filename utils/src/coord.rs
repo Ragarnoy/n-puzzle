@@ -1,4 +1,4 @@
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Default)]
 pub struct Coord
 {
     pub x: i16,

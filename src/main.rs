@@ -16,7 +16,7 @@ use algo::Algo;
 
 fn create_random_grid(lgth: u8) -> grid::Grid
 {
-    grid::Grid::new(puzzle_gen::random_puzzle(lgth))
+    grid::Grid::new(puzzle_gen::random_puzzle(lgth), lgth)
 }
 
 fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
@@ -61,7 +61,7 @@ fn parser(content: String) -> Result<(u8, grid::Grid), String>
     {
         // No need to clone `ret` here because it will be dropped at the end
         // of this function so we can safely give ownership to the new `Grid`.
-        Ok((nb_lines as u8, Grid::new(ret)))
+        Ok((nb_lines as u8, Grid::new(ret, nb_lines as u8)))
     }
     else
     {
@@ -88,7 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     let h_type = HType::from_str_or_default(matches.value_of("heuristic"))?;
     let (nb_col, grid) = parser(content)?;
     let mut initial_node = Node::new(State::default(), grid);
-    let goal = Grid::new(puzzle_gen::create_snail_goal(nb_col));
+    let goal = Grid::new(puzzle_gen::create_snail_goal(nb_col), nb_col as u8);
     initial_node.update_state(&goal, h_type, nb_col);
     let mut algo = Algo::new(initial_node, goal, h_type, nb_col);
     let result = algo.resolve();
