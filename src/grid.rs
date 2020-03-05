@@ -344,14 +344,19 @@ mod tests
     fn solvable()
     {
         let test = Grid::new(vec!(
-                                3, 1, 2, 
-                                8, 0, 4, 
-                                7, 6, 5), 3);
+                                0, 7, 6, 
+                                8, 2, 4, 
+                                1, 5, 3), 3);
         println!("{}", test.solvable());
         let test = Grid::new(vec!(
-                                5, 2, 6, 
-                                4, 8, 0, 
-                                7, 1, 3), 3);
+                                0, 1, 3, 
+                                4, 8, 6, 
+                                2, 5, 7), 3);
+        println!("{}", test.solvable());
+        let test = Grid::new(vec!(
+                                2, 1, 0, 
+                                4, 6, 5, 
+                                8, 7, 3), 3);
         println!("{}", test.solvable());
         let test = Grid::new(vec!(
                                 2, 5, 0, 

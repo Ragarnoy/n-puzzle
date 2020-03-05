@@ -16,7 +16,7 @@ pub struct Algo
     column: u8,
     h_type: HType,
     nb_nodes_wm: usize,
-    nb_poped: usize
+    nb_popped: usize
 }
 
 impl Algo
@@ -34,13 +34,13 @@ impl Algo
             column,
             h_type,
             nb_nodes_wm: 0,
-            nb_poped: 0
+            nb_popped: 0
         }
     }
 
-    pub fn get_nb_poped(&self) -> usize
+    pub fn get_nb_popped(&self) -> usize
     {
-        self.nb_poped
+        self.nb_popped
     }
 
     pub fn get_nb_nodes_wm(&self) -> usize
@@ -52,7 +52,7 @@ impl Algo
     {
         while let Some(node) = self.open_list.pop()
         {
-            self.nb_poped += 1;
+            self.nb_popped += 1;
             if node.borrow().state.h == 0 && node.borrow().grid == self.goal
             {
                 return Some(node);

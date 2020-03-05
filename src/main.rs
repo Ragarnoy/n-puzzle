@@ -174,8 +174,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         let lines = matches.value_of("random").unwrap().parse().unwrap();
         Grid::new(puzzle_gen::random_puzzle(lines), lines)
         // TODO Make solvable lol
-        // println!("{}", grid);
     };
+    println!("{}", grid);
+    if !grid.solvable()
+    {
+        error_handler(Err(String::from("Grid is unsolvable !")))
+    }
     let lines = grid.get_lines();
     let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
     // let (nb_col, grid) = error_handler(parser(content));
@@ -189,7 +193,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         {
             println!("A solution was found for the initial state you gave\nHere are the results:\n");
             println!("Amount of moves required:\t{}\n", solution.borrow().state.g);
-            println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_nb_poped());
+            println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_nb_popped());
             println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)\n", algo.get_nb_nodes_wm());
             println!("Steps to reach the goal:");
             solution.borrow().print_steps();
