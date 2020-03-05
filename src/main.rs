@@ -182,7 +182,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     let mut initial_node = Node::new(State::default(), grid);
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
     initial_node.update_state(&goal, h_type);
-    let mut algo = Algo::new(initial_node.clone(), goal, h_type, lines);
+    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, lines);
     match algo.resolve()
     {
         Some(solution) =>
