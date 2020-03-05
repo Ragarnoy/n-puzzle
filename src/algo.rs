@@ -10,13 +10,10 @@ use std::{
 
 pub struct Algo
 {
-    open_list: BinaryHeap<Rc<RefCell<Node>>>,
-    closed_list : Vec<Rc<RefCell<Node>>>,
-    best: Option<Rc<RefCell<Node>>>,
+    initial_node: Node,
     goal: Grid,
     column: u8,
     h_type: HType,
-    limit: u32
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -52,135 +49,83 @@ impl Algo
 {
     pub fn new(initial_node: Node, goal: Grid, h_type: HType, column: u8) -> Self
     {
-        let mut open_list: BinaryHeap<Rc<RefCell<Node>>> = BinaryHeap::new();
-        open_list.push(Rc::new(RefCell::new(initial_node)));
-
         Algo
         {
-            open_list,
-            closed_list: Vec::new(),
-            best: None,
+            initial_node,
             goal,
             column,
-            h_type,
-            limit: 5
+            h_type
         }
     }
 
-    // pub fn get_nb_poped(&self) -> usize
-    // {
-    //     self.nb_poped
-    // }
-
-    // pub fn get_nb_nodes_wm(&self) -> usize
-    // {
-    //     self.nb_nodes_wm
-    // }
-
-    pub fn resolve(&mut self) -> Option<Rc<RefCell<Node>>>
+    fn explore_node(&mut self, path: &mut Vec<Rc<RefCell<Node>>>, threshold: u32) -> u32
     {
-        while let Some(node) = self.open_list.pop()
+        if path.last().is_none()
         {
-            if node.borrow().state.h == 0 && node.borrow().grid == self.goal
-            {
-                return Some(node);
-            }
-            self.closed_list.push(Rc::clone(&node));
-            for child in Node::generate_childs(node)
-            {
-                if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)
-                {
-                    continue;
-                }
-                if child.borrow().state.g > self.limit
-                {
-                    if let Some(x) = self.best.as_ref()
-                    {
-                        if x.borrow().state.f > child.borrow().state.f
-                        {
-                            child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
-                            self.best = Some(Rc::clone(&child));
-                        }
-                    }
-                    else
-                    {
-                        child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
-                        self.best = Some(Rc::clone(&child));
-                    }
-                }
-                // else if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
-                // {
-                //     let child_g = child.borrow().state.g;
-                //     let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
+            return u32::max_value();
+        }
 
-                //     for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
-                //     {
-                //         let new_f = node.borrow().state.h as u32 + child_g;
-                //         node.borrow_mut().state.g = child_g;
-                //         node.borrow_mut().state.f = new_f;
-                //         node.borrow_mut().parent = Some(Rc::clone(&child_parent));
-                //     }
-                // }
-                else
-                {
-                    child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
-                    // if child.borrow().state.h == 0 {
-                    //     return Some(child);
-                    // }
-                    self.open_list.push(child)
-                }
-            }
-            if self.open_list.is_empty() && self.best.is_some()
+        let node = path.last().unwrap();
+        let curr_f = node.borrow().state.f;
+
+        if curr_f as u32 > threshold
+        {
+            return curr_f;
+        }
+        else if node.borrow().state.h == 0
+        {
+            return 0;
+        }
+        let mut lowest_f = u32::max_value();
+        let childs: BinaryHeap<Rc<RefCell<Node>>> = Node::generate_childs(Rc::clone(node)).into_iter().map(|c| {
+            c.borrow_mut().update_state(&self.goal, self.h_type);
+            Rc::clone(&c)
+        }).collect();
+        // let childs = Node::generate_childs(node.clone(), self.column);
+        for child in childs
+        {
+            // child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
+            if !path.contains(&child)
             {
-                println!("child.state: {:#?}", self.best.as_ref().unwrap().borrow().state);
-                println!("child.state:\n{}", self.best.as_ref().unwrap().borrow().grid);
-                self.open_list.push(Rc::clone(self.best.as_ref().unwrap()));
-                self.limit += 1;
+                path.push(Rc::clone(&child));
+                let recurs_res = self.explore_node(path, threshold);
+                if recurs_res == 0
+                {
+                    return 0;
+                }
+                else if recurs_res < lowest_f
+                {
+                    lowest_f = recurs_res;
+                }
+                path.pop();
             }
         }
-        None
+        return lowest_f;
     }
 
-    // pub fn resolve(&mut self) -> Option<Rc<RefCell<Node>>>
-    // {
-    //     while let Some(node) = self.open_list.pop()
-    //     {
-    //         if node.borrow().state.h == 0
-    //         {
-    //             return Some(node);
-    //         }
-    //         self.closed_list.push(Rc::clone(&node));
-    //         for child in Node::generate_childs(node, self.column)
-    //         {
-    //             if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)
-    //             {
-    //                 continue;
-    //             }
-    //             else if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
-    //             {
-    //                 let child_g = child.borrow().state.g;
-    //                 let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
+    pub fn resolve(&mut self) -> Vec<Rc<RefCell<Node>>>
+    {
+        let mut threshold = self.initial_node.state.h as u32;
+        let mut path = vec![Rc::new(RefCell::new(self.initial_node.clone()))];
 
-    //                 for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
-    //                 {
-    //                     let new_f = node.borrow().state.h as u32 + child_g;
-    //                     node.borrow_mut().state.g = child_g;
-    //                     node.borrow_mut().state.f = new_f;
-    //                     node.borrow_mut().parent = Some(Rc::clone(&child_parent));
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
-    //                 if child.borrow().state.h == 0 {
-    //                     return Some(child);
-    //                 }
-    //                 self.open_list.push(child)
-    //             }
-    //         }
-    //     }
-    //     None
-    // }
+        loop
+        {
+            let recurs_res = self.explore_node(&mut path, threshold);
+            if recurs_res == 0
+            {
+                return path;
+            }
+            else if recurs_res == u32::max_value()
+            {
+                return Vec::new();
+            }
+            else
+            {
+                threshold = recurs_res;
+            }
+        }
+    }
+
 }
 
 #[cfg(test)]
