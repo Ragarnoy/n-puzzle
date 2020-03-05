@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                     .conflicts_with("random")
                     .required_unless("random")
                     .validator(expect_file)
-                    .help("<file.txt> input"))
+                    .help("<input.txt>"))
                 .arg(Arg::with_name("random")
                     .short("r")
                     .help("-r <3-16> (conflicts with file input)")
