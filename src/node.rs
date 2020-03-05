@@ -66,7 +66,7 @@ impl Node
     {
         match h_type
         {
-            HType::Manning => self.state.update_manning(&self.grid, goal),
+            HType::Hamming => self.state.update_hamming(&self.grid, goal),
             HType::Manhattan => self.state.update_manhattan(&self.grid, goal),
             HType::LinearManhattan => self.state.update_linear_manhattan(&self.grid, goal)
         }

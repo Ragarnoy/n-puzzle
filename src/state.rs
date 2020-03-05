@@ -80,9 +80,9 @@ impl State
         }
     }
     
-    pub fn update_manning(&mut self, grid: &Grid, goal: &Grid)
+    pub fn update_hamming(&mut self, grid: &Grid, goal: &Grid)
     {
-        self.h = grid.manning(goal);
+        self.h = grid.hamming(goal);
         self.f = self.g + self.h as u32;
     }
     

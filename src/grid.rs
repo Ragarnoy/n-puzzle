@@ -27,7 +27,7 @@ impl Move
 #[derive(Copy, Clone, Debug)]
 pub enum HType
 {
-    Manning,
+    Hamming,
     Manhattan,
     LinearManhattan
 }
@@ -36,7 +36,7 @@ impl Default for HType
 {
     fn default() -> Self
     {
-        Self::Manning
+        Self::Hamming
     }
 }
 
@@ -47,7 +47,7 @@ impl HType
         match input
         {
             None => Ok(Self::default()),
-            Some("hamming") => Ok(Self::Manning),
+            Some("hamming") => Ok(Self::Hamming),
             Some("manhattan") => Ok(Self::Manhattan),
             Some("linear_manhattan") => Ok(Self::LinearManhattan),
             Some(h) => Err(format!("This heuristic function does not exist: {}", h))
@@ -112,7 +112,7 @@ impl Grid
         [Move::Up, Move::Down, Move::Right, Move::Left].iter().filter_map(|&m| self.move_zero(m)).collect()
     }
 
-    pub fn manning(&self, goal: &Grid) -> u16
+    pub fn hamming(&self, goal: &Grid) -> u16
     {
         self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
         {
@@ -225,7 +225,7 @@ mod tests
         let test = Grid::new(vec!(1, 2, 3, 4, 5, 6, 7, 8, 0), 3);
         let expected = 4;
 
-        assert_eq!(test.manning(&goal), expected);
+        assert_eq!(test.hamming(&goal), expected);
     }
 
     #[test]

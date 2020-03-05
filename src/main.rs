@@ -7,7 +7,7 @@ mod grid;
 mod node;
 mod puzzle_gen;
 mod algo;
-use clap::{Arg, App};
+use clap::{Arg, App, AppSettings};
 use std::{path::Path, fs};
 use grid::{Grid, HType};
 use node::Node;
@@ -79,10 +79,26 @@ fn expect_integer(nbr: String) -> Result<(), String>
         }
         else
         {
-            return Err(String::from("The number must be between 2 and 16"))
+            return Err(String::from("Number must be between 2 and 16"))
         }
     }
     Err(String::from("Expected a number"))
+}
+
+fn expect_file(file: String) -> Result<(), String>
+{
+    if Path::new(&file).exists()
+    {
+        if Path::new(&file).is_file()
+        {
+            return Ok(())
+        }
+        else
+        {
+            return Err(String::from("File expected."))
+        }
+    }
+    Err(String::from("Path is invalid/does not exist."))
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> 
@@ -91,34 +107,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                 .version(crate_version!())
                 .author(crate_authors!())
                 .about(crate_description!())
+                .setting(AppSettings::ArgRequiredElseHelp)
                 .arg(Arg::with_name("input")
-                    .conflicts_with("random")
                     .index(1)
-                    .required(true)
                     .number_of_values(1)
+                    .conflicts_with("random")
+                    .required_unless("random")
+                    .validator(expect_file)
                     .help("<file.txt> input"))
                 .arg(Arg::with_name("random")
                     .short("r")
+                    .help("-r <3-16> (conflicts with file input)")
                     .number_of_values(1)
-                    .conflicts_with("input")
-                    .validator(expect_integer)
-                    .help("-r <3-16>"))
+                    .validator(expect_integer))
                 .arg(Arg::with_name("heuristic")
                     .short("e")
-                    .long("heuristic")
                     .required(false)
+                    .long("heuristic")
                     .number_of_values(1)
-                    .possible_values(&["hamming", "manhattan", "linear_manhattan"])
-                    .help("<heuristic_name>"))
+                    .help("<heuristic_name>")
+                    .possible_values(&["hamming", 
+                                    "manhattan", 
+                                    "linear_manhattan"]))
                 .get_matches();
 
     let content: String;
     let grid;
-    let mut lines: u8;
+    let lines: u8;
     if matches.value_of("input").is_some()
     {
         content = fs::read_to_string(Path::new(matches.value_of("input").expect("Invalid input")))?;
         grid = parser(content)?;
+        lines = grid.get_lines();
     }
     else if matches.value_of("random").is_some()
     {
@@ -132,7 +152,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         // impossible
         panic!("bruh wtf");
     }
-    lines = grid.get_lines();
     let h_type = HType::from_str_or_default(matches.value_of("heuristic"))?;
     let mut initial_node = Node::new(State::default(), grid);
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
