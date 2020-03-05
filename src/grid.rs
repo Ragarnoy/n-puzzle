@@ -1,5 +1,6 @@
 use std::fmt;
 use utils::coord::Coord;
+use utils::snail_sort;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Move
@@ -127,6 +128,45 @@ impl Grid
         })
     }
 
+    pub fn solvable(&self) -> bool
+    {
+        let mut solve = snail_sort(&self.map, self.lines);
+        let mut inv_cout: u16 = 0;
+
+        solve.reverse();
+        while !solve.is_empty()
+        {
+            let i = solve.remove(0);
+            if i == 0
+            {
+                continue;
+            }
+            for j in solve.iter().filter(|j| **j < i)
+            {
+                if *j != 0
+                {
+                    inv_cout += 1;
+                }
+            }
+        }
+        
+        if self.lines % 2 != 0
+        {
+            !(inv_cout % 2 != 0)
+        }
+        else
+        {
+            if (self.lines as i16 - Coord::from_abs(self.z_pos as u32, self.lines).y) % 2 != 0
+            {
+                !(inv_cout % 2 != 0)
+            }
+            else
+            {
+                inv_cout % 2 != 0
+            }
+        }
+    }
+
     pub fn manhattan(&self, goal: &Grid) -> u16
     {
         self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
@@ -207,6 +247,12 @@ impl fmt::Display for Grid
         Ok(result)
     }
 }
+
+
+
+
+
+
 
 #[cfg(test)]
 mod tests
@@ -292,5 +338,35 @@ mod tests
                                 7, 0, 5, 
                                 1, 2, 3), 3);
         assert_eq!(test.linear_conflict(&goal), 5);
+    }
+
+    #[test]
+    fn solvable()
+    {
+        let test = Grid::new(vec!(
+                                3, 1, 2, 
+                                8, 0, 4, 
+                                7, 6, 5), 3);
+        println!("{}", test.solvable());
+        let test = Grid::new(vec!(
+                                5, 2, 6, 
+                                4, 8, 0, 
+                                7, 1, 3), 3);
+        println!("{}", test.solvable());
+        let test = Grid::new(vec!(
+                                2, 5, 0, 
+                                8, 7, 6, 
+                                3, 4, 1), 3);
+        println!("{}", test.solvable());
+        let test = Grid::new(vec!(
+                                1, 0, 3, 
+                                8, 2, 4, 
+                                7, 6, 5), 3);
+        println!("{}", test.solvable());
+        let test = Grid::new(vec!(
+                                1, 2, 3, 
+                                8, 4, 0, 
+                                7, 6, 5), 3);
+        println!("{}", test.solvable());
     }
 }

@@ -11,7 +11,7 @@ use std::{
 pub struct Algo
 {
     open_list: BinaryHeap<Rc<RefCell<Node>>>,
-    closed_list : Vec<Rc<RefCell<Node>>>,
+    closed_list: Vec<Rc<RefCell<Node>>>,
     goal: Grid,
     column: u8,
     h_type: HType,
