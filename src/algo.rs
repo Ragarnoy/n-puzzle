@@ -3,7 +3,7 @@ use crate::{
     node::Node
 };
 use std::{
-    collections::{BinaryHeap, HashSet},
+    collections::BinaryHeap,
     rc::Rc,
     cell::RefCell
 };
@@ -81,10 +81,8 @@ impl Algo
             c.borrow_mut().update_state(&self.goal, self.h_type);
             Rc::clone(&c)
         }).collect();
-        // let childs = Node::generate_childs(node.clone(), self.column);
         for child in childs
         {
-            // child.borrow_mut().update_state(&self.goal, self.h_type, self.column);
             if !path.contains(&child)
             {
                 path.push(Rc::clone(&child));

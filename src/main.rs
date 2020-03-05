@@ -253,19 +253,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
     initial_node.update_state(&goal, h_type);
     let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, lines);
-    match algo.resolve()
+    let path = algo.resolve();
+    if let Some(end) = path.last()
     {
-        Some(solution) =>
-        {
-            println!("A solution was found for the initial state you gave\nHere are the results:\n");
-            println!("Amount of moves required:\t{}\n", solution.borrow().state.g);
-            println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_nb_popped());
-            println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)\n", algo.get_nb_nodes_wm());
-            println!("Steps to reach the goal:");
-            solution.borrow().print_steps();
-            Ok(())
-        },
-        None => Err(format!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}", initial_node.grid, goal).into())
+        println!("A solution was found for the initial state you gave\nHere are the results:\n");
+        println!("Amount of moves required:\t{}\n", end.borrow().state.g);
+        // println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_nb_poped());
+        // println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)\n", algo.get_nb_nodes_wm());
+        println!("Steps to reach the goal:");
+        end.borrow().print_steps();
+        Ok(())
+    }
+    else
+    {
+        eprintln!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}", initial_node.grid, goal);
+        std::process::exit(42);
     }
 }
 
