@@ -7,12 +7,12 @@ mod grid;
 mod node;
 mod puzzle_gen;
 mod algo;
-use clap::{Arg, App, AppSettings};
+use clap::{Arg, App, AppSettings, ArgSettings};
 use std::{path::Path, fs};
 use grid::{Grid, HType};
 use node::Node;
 use state::State;
-use algo::Algo;
+use algo::{Algo, AType};
 
 fn create_random_grid(lgth: u8) -> grid::Grid
 {
@@ -87,17 +87,49 @@ fn parser(content: String) -> Result<grid::Grid, String>
     }
 }
 
-fn expect_integer(nbr: String) -> Result<(), String>
+fn expect_size(nbr: String) -> Result<(), String>
 {
     if nbr.parse::<u8>().is_ok()
     {
-        if nbr.parse::<u8>().unwrap() > 2 && nbr.parse::<u8>().unwrap() < 16
+        if nbr.parse::<u8>().unwrap() > 2 && nbr.parse::<u8>().unwrap() < 9
         {
             return Ok(())
         }
         else
         {
-            return Err(String::from("Number must be between 2 and 16"))
+            return Err(String::from("Number must be between 2 and 8"))
+        }
+    }
+    Err(String::from("Expected a number"))
+}
+
+fn expect_weight(nbr: String) -> Result<(), String>
+{
+    if nbr.parse::<u8>().is_ok()
+    {
+        if nbr.parse::<u8>().unwrap() > 0 && nbr.parse::<u8>().unwrap() < 100
+        {
+            return Ok(())
+        }
+        else
+        {
+            return Err(String::from("Number must be between 0 and 100"))
+        }
+    }
+    Err(String::from("Expected a number"))
+}
+
+fn expect_gscore(nbr: String) -> Result<(), String>
+{
+    if nbr.parse::<u32>().is_ok()
+    {
+        if nbr.parse::<u32>().unwrap() > 0 && nbr.parse::<u32>().unwrap() < u32::max_value()
+        {
+            return Ok(())
+        }
+        else
+        {
+            return Err(String::from("Number must be between 0 and U32MAX"))
         }
     }
     Err(String::from("Expected a number"))
@@ -146,24 +178,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                     .conflicts_with("random")
                     .required_unless("random")
                     .validator(expect_file)
-                    .help("<input.txt>"))
+                    .help("Input file. Must be square, solvable, larger than 2 by 2 and smaller than 9 by 9."))
                 .arg(Arg::with_name("random")
                     .short("r")
-                    .help("-r <3-16> (conflicts with file input)")
+                    .long("random")
                     .number_of_values(1)
-                    .validator(expect_integer))
+                    .validator(expect_size)
+                    .help("Generate random grid (between 3 and 8)."))
                 .arg(Arg::with_name("heuristic")
                     .short("e")
-                    .required(false)
                     .long("heuristic")
                     .number_of_values(1)
-                    .help("<heuristic_name>")
                     .possible_values(&["hamming", 
                                     "manhattan", 
-                                    "linear_manhattan"]))
+                                    "linear_manhattan"])
+                    .help("Choose heuristic model. Default is linear manhattan (fastest)."))
+                .arg(Arg::with_name("algorithm")
+                    .short("a")
+                    .long("algorithm")
+                    .number_of_values(1)
+                    .possible_values(&["astar", "idastar"])
+                    .help("Choose algorithm. Default depends on the submitted grid."))
+                .arg(Arg::with_name("weight")
+                    .short("w")
+                    .long("weight")
+                    .number_of_values(1)
+                    .validator(expect_weight)
+                    .help("Force heuristic max weight to value. Max is 100."))
+                .arg(Arg::with_name("uniform")
+                    .short("u")
+                    .long("uniform")
+                    .validator(expect_gscore)
+                    .number_of_values(1)
+                    .help("Set heuristic model variant to uniform cost with value. Max is u32_max"))
+                .arg(Arg::with_name("greedy")
+                    .short("g")
+                    .long("greedy")
+                    .conflicts_with("uniform")
+                    .conflicts_with("weight")
+                    .takes_value(false)
+                    .help("Set heuristic model variant to greedy."))
                 .get_matches();
 
-    // let content: String;
     let grid = if matches.value_of("input").is_some()
     {
         let content = error_handler(fs::read_to_string(Path::new(matches.value_of("input").expect("Invalid input"))));
@@ -173,7 +229,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     {
         let lines = matches.value_of("random").unwrap().parse().unwrap();
         Grid::new(puzzle_gen::random_puzzle(lines), lines)
-        // TODO Make solvable lol
     };
     println!("{}", grid);
     if !grid.solvable()
@@ -181,8 +236,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         error_handler(Err(String::from("Grid is unsolvable !")))
     }
     let lines = grid.get_lines();
+    let greed = matches.is_present("greedy");
+    let g_score: u32 = match matches.value_of("uniform")
+    {
+        Some(x) => x.parse().unwrap(),
+        None => 0,
+    };
+    let max_weight: u8 = match matches.value_of("weight")
+    {
+        Some(x) => x.parse().unwrap(),
+        None => (lines / 2 + 1),
+    };
+    let a_type = error_handler(AType::from_str_or_default(matches.value_of("algorithm")));
     let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
-    // let (nb_col, grid) = error_handler(parser(content));
     let mut initial_node = Node::new(State::default(), grid);
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
     initial_node.update_state(&goal, h_type);

@@ -34,6 +34,20 @@ impl Default for AType
     }
 }
 
+impl AType
+{
+    pub fn from_str_or_default(input: Option<&str>) -> Result<Self, String>
+    {
+        match input
+        {
+            None => Ok(Self::default()),
+            Some("idastar") => Ok(Self::AStar),
+            Some("astar") => Ok(Self::IDAStar),
+            Some(h) => Err(format!("This algorithmic function does not exist: {}", h))
+        }
+    }
+}
+
 impl Algo
 {
     pub fn new(initial_node: Node, goal: Grid, h_type: HType, column: u8) -> Self
