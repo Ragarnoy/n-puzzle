@@ -149,10 +149,11 @@ impl Grid
 
     pub fn solvable(&self) -> bool
     {
-        let mut solve = snail_sort(&self.map, self.lines);
+        let mut solve = self.map.clone();
         let mut inv_cout: u16 = 0;
+        let ret: bool;
+        let blank_bot = self.lines as i16 - Coord::from_abs(solve.iter().position(|&x| x == 0).unwrap_or(0) as u32, self.lines).y;
 
-        solve.reverse();
         while !solve.is_empty()
         {
             let i = solve.remove(0);
@@ -169,21 +170,34 @@ impl Grid
             }
         }
         
-        if self.lines % 2 != 0
+        println!("Inv count = {}", inv_cout);
+        if self.lines % 2 == 0
         {
-            !(inv_cout % 2 != 0)
-        }
-        else
-        {
-            if (self.lines as i16 - Coord::from_abs(self.z_pos as u32, self.lines).y) % 2 != 0
+            println!("Even lines.");
+            if blank_bot % 2 == 0
             {
-                !(inv_cout % 2 != 0)
+                println!("Even inverted blank pos.");
+                ret = inv_cout % 2 != 0;
             }
             else
             {
-                inv_cout % 2 != 0
+                println!("Odd inverted blank pos.");
+                ret = !(inv_cout % 2 != 0);
             }
         }
+        else
+        {
+            println!("Odd lines.");
+            ret = inv_cout % 2 != 0;
+        }
+    if self.lines < 6
+    {
+        ret
+    }
+    else
+    {
+        !ret
+    }
     }
 
     pub fn manhattan(&self, goal: &Grid) -> u16
@@ -382,6 +396,7 @@ mod tests
                                 8, 7, 6, 
                                 3, 4, 1), 3);
         println!("{}", test.solvable());
+        // Below is solvable
         let test = Grid::new(vec!(
                                 1, 0, 3, 
                                 8, 2, 4, 
