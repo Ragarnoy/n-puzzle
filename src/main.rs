@@ -14,11 +14,6 @@ use node::Node;
 use state::State;
 use algo::{Algo, AType};
 
-fn create_random_grid(lgth: u8) -> grid::Grid
-{
-    grid::Grid::new(puzzle_gen::random_puzzle(lgth), lgth)
-}
-
 fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
 {
     let len = input.len();
@@ -55,14 +50,12 @@ fn parser(content: String) -> Result<grid::Grid, String>
     for line in content_lines
     {
         let mut invalid_token = false;
-        println!("DEBUG::main::parser: current line: {}", line);
         let mut parsed_line: Vec<u16> = line.split_whitespace().map(|x| {
             let res = x.parse::<u16>();
             if res.is_err()
             {
                 invalid_token = true;
             }
-            println!("DEBUG::main::parser: current token in line: [{}]", x);
             res.unwrap_or(0)
         }).collect();
         if invalid_token
@@ -79,7 +72,7 @@ fn parser(content: String) -> Result<grid::Grid, String>
     {
         // No need to clone `ret` here because it will be dropped at the end
         // of this function so we can safely give ownership to the new `Grid`.
-        Ok((Grid::new(ret, nb_lines as u8)))
+        Ok(Grid::new(ret, nb_lines as u8))
     }
     else
     {
@@ -228,7 +221,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     else
     {
         let lines = matches.value_of("random").unwrap().parse().unwrap();
-        Grid::new(puzzle_gen::random_puzzle(lines), lines)
+        Grid::new_random(lines)
     };
     println!("{}", grid);
     if !matches.is_present("random") && !grid.solvable()
@@ -249,23 +242,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     };
     let a_type = error_handler(AType::from_str_or_default(matches.value_of("algorithm")));
     let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
-    let mut initial_node = Node::new(State::default(), grid);
+    let mut initial_node = Node::new(State::default(), grid.clone());
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
-    initial_node.update_state(&goal, h_type);
-    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, lines);
-    match algo.resolve()
+    initial_node.update_state(&goal, h_type, 1);
+    // TODO: Replace the last parameter (10) by the real value from the cmdline
+    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, a_type, lines as u32, lines as u32);
+    if algo.resolve()
     {
-        Some(solution) =>
-        {
-            println!("A solution was found for the initial state you gave\nHere are the results:\n");
-            println!("Amount of moves required:\t{}\n", solution.borrow().state.g);
-            println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_nb_popped());
-            println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)\n", algo.get_nb_nodes_wm());
-            println!("Steps to reach the goal:");
-            solution.borrow().print_steps();
-            Ok(())
-        },
-        None => Err(format!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}", initial_node.grid, goal).into())
+        println!("A solution was found for the initial state you gave\nHere are the results:\n");
+        println!("Steps to reach the goal:\n");
+        algo.print_steps();
+        println!("Amount of moves required:\t{}\n", algo.get_total_cost());
+        println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_t_complex());
+        println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)", algo.get_s_complex());
+        Ok(())
+    }
+    else
+    {
+        eprintln!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}", initial_node.grid, goal);
+        std::process::exit(42);
     }
 }
 

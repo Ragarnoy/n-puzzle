@@ -1,7 +1,8 @@
 use std::fmt;
-use utils::coord::Coord;
-use utils::snail_sort;
 use std::hash::{Hash, Hasher};
+use utils::{snail_sort, coord::Coord};
+use rand::{self, Rng};
+use crate::puzzle_gen::create_snail_goal;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Move
@@ -14,6 +15,18 @@ pub enum Move
 
 impl Move
 {
+    pub fn from(from: u8) -> Self
+    {
+        match from
+        {
+            0 => Self::Up,
+            1 => Self::Down,
+            2 => Self::Right,
+            3 => Self::Left,
+            _ => Self::Up
+        }
+    }
+
     pub fn apply(&self, coord: &mut Coord)
     {
         match self
@@ -95,6 +108,17 @@ impl Grid
         }
     }
 
+    pub fn new_random(lines: u8) -> Self
+    {
+        let mut rng = rand::thread_rng();
+        let mut puzzle = Self::new(create_snail_goal(lines), lines);
+        for i in 0..(512 * lines as u128)
+        {
+            puzzle = puzzle.move_zero(Move::from(rng.gen_range(0, 4))).unwrap_or(puzzle);
+        }
+        puzzle
+    }
+
     pub fn get_lines(&self) -> u8
     {
         self.lines
@@ -132,7 +156,7 @@ impl Grid
         [Move::Up, Move::Down, Move::Right, Move::Left].iter().filter_map(|&m| self.move_zero(m)).collect()
     }
 
-    pub fn hamming(&self, goal: &Grid) -> u16
+    pub fn hamming(&self, goal: &Grid) -> u32
     {
         self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
         {
@@ -200,7 +224,7 @@ impl Grid
     }
     }
 
-    pub fn manhattan(&self, goal: &Grid) -> u16
+    pub fn manhattan(&self, goal: &Grid) -> u32
     {
         self.map.iter().zip(goal.map.iter()).filter(|(i, _)| **i != 0).fold(0, |acc, (i, g)| 
         {
@@ -208,7 +232,7 @@ impl Grid
             let self_cord = Coord::from_abs(self.map.iter().enumerate().find(|(_, y)| **y == *i).unwrap().0 as u32, self.lines);
             if i != g
             {
-                acc + ((goal_cord.x - self_cord.x).abs() + (goal_cord.y - self_cord.y).abs()) as u16
+                acc + ((goal_cord.x - self_cord.x).abs() as u32 + (goal_cord.y - self_cord.y).abs() as u32)
             }
             else
             {
@@ -234,9 +258,9 @@ impl Grid
         }).collect()
     }
 
-    pub fn linear_conflict(&self, goal: &Grid) -> u16
+    pub fn linear_conflict(&self, goal: &Grid) -> u32
     {
-        let mut ret: u16 = 0;
+        let mut ret: u32 = 0;
         let mut conflict: Vec<(Coord, Coord)> = Grid::check_misplaced(self, goal).into_iter().filter(|(from, goal)| from.x == goal.x || from.y == goal.y).rev().collect();
 
         while let Some((f, g)) = conflict.pop()
@@ -252,7 +276,7 @@ impl Grid
         ret
     }
 
-    pub fn linear_manhattan(&self, goal: &Grid) -> u16
+    pub fn linear_manhattan(&self, goal: &Grid) -> u32
     {
         self.manhattan(goal) + self.linear_conflict(goal) * 2
     }
@@ -407,5 +431,12 @@ mod tests
                                 8, 4, 0, 
                                 7, 6, 5), 3);
         println!("{}", test.solvable());
+    }
+
+    #[test]
+    fn new_random()
+    {
+        let puzzle = Grid::new_random(4);
+        println!("{}", puzzle);
     }
 }

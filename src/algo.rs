@@ -3,20 +3,24 @@ use crate::{
     node::Node
 };
 use std::{
-    collections::{BinaryHeap, HashSet},
+    collections::BinaryHeap,
     rc::Rc,
-    cell::RefCell
+    cell::RefCell,
 };
 
 pub struct Algo
 {
     open_list: BinaryHeap<Rc<RefCell<Node>>>,
     closed_list: Vec<Rc<RefCell<Node>>>,
+    path: Vec<Rc<RefCell<Node>>>,
+    solution: Option<Rc<RefCell<Node>>>,
     goal: Grid,
-    column: u8,
     h_type: HType,
-    nb_nodes_wm: usize,
-    nb_popped: usize
+    a_type: AType,
+    t_complex: u64,
+    s_complex: u64,
+    weight: u32,
+    max_weight: u32
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -41,8 +45,8 @@ impl AType
         match input
         {
             None => Ok(Self::default()),
-            Some("idastar") => Ok(Self::AStar),
-            Some("astar") => Ok(Self::IDAStar),
+            Some("astar") => Ok(Self::AStar),
+            Some("idastar") => Ok(Self::IDAStar),
             Some(h) => Err(format!("This algorithmic function does not exist: {}", h))
         }
     }
@@ -50,41 +54,195 @@ impl AType
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, h_type: HType, column: u8) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType, a_type: AType, max_weight: u32, min_weight: u32) -> Self
     {
-        let mut open_list: BinaryHeap<Rc<RefCell<Node>>> = BinaryHeap::new();
-        open_list.push(Rc::new(RefCell::new(initial_node)));
+        let initial_node = Rc::new(RefCell::new(initial_node));
+        let mut open_list = BinaryHeap::new();
+        open_list.push(Rc::clone(&initial_node));
 
         Algo
         {
             open_list,
             closed_list: Vec::new(),
+            path: vec![initial_node],
+            solution: None,
             goal,
-            column,
             h_type,
-            nb_nodes_wm: 0,
-            nb_popped: 0
+            a_type,
+            t_complex: 0,
+            s_complex: 0,
+            weight: min_weight,
+            max_weight
         }
     }
 
-    pub fn get_nb_popped(&self) -> usize
+    pub fn get_s_complex(&self) -> u64
     {
-        self.nb_popped
+        self.s_complex
     }
 
-    pub fn get_nb_nodes_wm(&self) -> usize
+    pub fn get_t_complex(&self) -> u64
     {
-        self.nb_nodes_wm
+        self.t_complex
     }
 
-    pub fn resolve(&mut self) -> Option<Rc<RefCell<Node>>>
+    pub fn get_total_cost_a_star(&self) -> u32
+    {
+        if let Some(sol) = self.solution.as_ref()
+        {
+            sol.borrow().state.g
+        }
+        else
+        {
+            0
+        }
+    }
+
+    pub fn get_total_cost_ida_star(&self) -> u32
+    {
+        if let Some(node) = self.path.last()
+        {
+            node.borrow().state.g
+        }
+        else
+        {
+            0
+        }
+    }
+
+    pub fn get_total_cost(&self) -> u32
+    {
+        match self.a_type
+        {
+            AType::AStar => self.get_total_cost_a_star(),
+            AType::IDAStar => self.get_total_cost_ida_star()
+        }
+    }
+
+    pub fn print_steps(&self)
+    {
+        match self.a_type
+        {
+            AType::AStar => self.print_steps_a_star(),
+            AType::IDAStar => self.print_steps_ida_star()
+        }
+    }
+
+    pub fn print_steps_a_star(&self)
+    {
+        if let Some(sol) = self.solution.as_ref()
+        {
+            sol.borrow().print_steps();
+        }
+    }
+
+    pub fn print_steps_ida_star(&self)
+    {
+        if !self.path.is_empty()
+        {
+            for node in self.path.iter()
+            {
+                println!("{}", node.borrow().grid);
+                println!("===================================\n");
+            }   
+        }
+    }
+
+    fn explore_node(&mut self, threshold: u64) -> u64
+    {
+        if self.path.last().is_none()
+        {
+            return u64::max_value();
+        }
+
+        self.t_complex += 1;
+        let node = self.path.last().unwrap();
+        let curr_f = node.borrow().state.f;
+
+        if curr_f > threshold
+        {
+            return curr_f;
+        }
+        else if node.borrow().state.h == 0
+        {
+            return 0;
+        }
+        let mut lowest_f = u64::max_value();
+        let childs: BinaryHeap<Rc<RefCell<Node>>> = Node::generate_childs(Rc::clone(node)).into_iter().map(|c| {
+            c.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
+            Rc::clone(&c)
+        }).collect();
+        let s_complex = self.path.len() as u64 + childs.len() as u64;
+        if s_complex > self.s_complex
+        {
+            self.s_complex = s_complex;
+        }
+        for child in childs
+        {
+            if !self.path.contains(&child)
+            {
+                self.path.push(Rc::clone(&child));
+                let recurs_res = self.explore_node(threshold);
+                if recurs_res == 0
+                {
+                    return 0;
+                }
+                else if recurs_res < lowest_f
+                {
+                    lowest_f = recurs_res;
+                }
+                self.path.pop();
+            }
+        }
+        return lowest_f;
+    }
+
+    pub fn resolve_ida_star(&mut self) -> bool
+    {
+        let mut threshold = self.path.last().unwrap().borrow().state.h as u64;
+        let mut threshold_change_count = 0;
+        let mut threshold_change_max = 1;
+        self.s_complex += 1;
+
+        loop
+        {
+            let recurs_res = self.explore_node(threshold);
+            if recurs_res == 0
+            {
+                return true;
+            }
+            else if recurs_res == u64::max_value()
+            {
+                return false;
+            }
+            else
+            {
+                threshold = recurs_res;
+                threshold_change_count += 1;
+                println!("New threshold: {}", threshold);
+                if threshold_change_count >= threshold_change_max && self.weight < self.max_weight
+                {
+                    self.weight += 1;
+                    if self.weight % 5 == 0
+                    {
+                        threshold_change_max += 1;
+                    }
+                    threshold_change_count = 0;
+                }
+                println!("New weight: {}", self.weight);
+            }
+        }
+    }
+
+    pub fn resolve_a_star(&mut self) -> bool
     {
         while let Some(node) = self.open_list.pop()
         {
-            self.nb_popped += 1;
+            self.t_complex += 1;
             if node.borrow().state.h == 0 && node.borrow().grid == self.goal
             {
-                return Some(node);
+                self.solution = Some(node);
+                return true;
             }
             self.closed_list.push(Rc::clone(&node));
             for child in Node::generate_childs(node)
@@ -105,7 +263,7 @@ impl Algo
 
                     for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
                     {
-                        let new_f = node.borrow().state.h as u32 + child_g;
+                        let new_f = node.borrow().state.h as u64 + child_g as u64;
                         node.borrow_mut().state.g = child_g;
                         node.borrow_mut().state.f = new_f;
                         node.borrow_mut().parent = Some(Rc::clone(&child_parent));
@@ -113,20 +271,31 @@ impl Algo
                 }
                 else
                 {
-                    child.borrow_mut().update_state(&self.goal, self.h_type);
-                    if child.borrow().state.h == 0 {
-                        return Some(child);
+                    child.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
+                    if child.borrow().state.h == 0
+                    {
+                        self.solution = Some(child);
+                        return true;
                     }
                     self.open_list.push(child)
                 }
             }
             let max_states = self.open_list.len() + self.closed_list.len();
-            if self.nb_nodes_wm < max_states
+            if self.s_complex < max_states as u64
             {
-                self.nb_nodes_wm = max_states;
+                self.s_complex = max_states as u64;
             }
         }
-        None
+        false
+    }
+
+    pub fn resolve(&mut self) -> bool
+    {
+        match self.a_type
+        {
+            AType::AStar => self.resolve_a_star(),
+            AType::IDAStar => self.resolve_ida_star()
+        }
     }
 }
 
