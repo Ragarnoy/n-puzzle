@@ -3,9 +3,9 @@ use crate::grid::Grid;
 #[derive(Eq, PartialEq, Clone, Debug, Default)]
 pub struct State
 {
-    pub h: u16,
+    pub h: u32,
     pub g: u32,
-    pub f: u32,
+    pub f: u64,
 }
 
 impl PartialOrd for State
@@ -70,7 +70,7 @@ impl Ord for State
 
 impl State
 {
-    pub fn new(h:u16, g:u32, f:u32) -> Self
+    pub fn new(h:u32, g:u32, f:u64) -> Self
     {
         State
         {
@@ -82,20 +82,20 @@ impl State
     
     pub fn update_hamming(&mut self, grid: &Grid, goal: &Grid, weight: u32)
     {
-        self.h = grid.hamming(goal) * weight as u16;
-        self.f = self.g + self.h as u32;
+        self.h = grid.hamming(goal) * weight;
+        self.f = self.g as u64 + self.h as u64;
     }
     
     pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32)
     {
-        self.h = grid.manhattan(goal) * weight as u16;
-        self.f = self.g + self.h as u32;
+        self.h = grid.manhattan(goal) * weight;
+        self.f = self.g as u64 + self.h as u64;
     }
     
     pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32)
     {
-        self.h = grid.linear_manhattan(goal) * weight as u16;
-        self.f = self.g + self.h as u32;
+        self.h = grid.linear_manhattan(goal) * weight;
+        self.f = self.g as u64 + self.h as u64;
     }
 }
 

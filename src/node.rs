@@ -80,13 +80,4 @@ impl Node
             HType::LinearManhattan => self.state.update_linear_manhattan(&self.grid, goal, weight)
         }
     }
-
-    pub fn print_steps(&self)
-    {
-        if let Some(parent) = &self.parent
-        {
-            parent.borrow().print_steps();
-        }
-        println!("{}", self.grid);
-    }
 }
