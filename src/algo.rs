@@ -6,7 +6,6 @@ use std::{
     collections::BinaryHeap,
     rc::Rc,
     cell::RefCell,
-    time::{Duration, Instant},
 };
 
 pub struct Algo
@@ -120,7 +119,6 @@ impl Algo
         }
         let mut lowest_f = u64::max_value();
         let childs: BinaryHeap<Rc<RefCell<Node>>> = Node::generate_childs(Rc::clone(node)).into_iter().map(|c| {
-            let update_time = Instant::now();
             c.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
             Rc::clone(&c)
         }).collect();
