@@ -12,8 +12,10 @@ pub struct Algo
 {
     initial_node: Node,
     goal: Grid,
-    column: u8,
     h_type: HType,
+    t_complex: u64,
+    s_complex: u64,
+    weight: u32
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -47,15 +49,29 @@ impl AType
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, h_type: HType, column: u8) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType) -> Self
     {
+        let weight = initial_node.state.h as u32 / 2;
+
         Algo
         {
             initial_node,
             goal,
-            column,
-            h_type
+            h_type,
+            t_complex: 0,
+            s_complex: 0,
+            weight
         }
+    }
+
+    pub fn get_s_complex(&self) -> u64
+    {
+        self.s_complex
+    }
+
+    pub fn get_t_complex(&self) -> u64
+    {
+        self.t_complex
     }
 
     fn explore_node(&mut self, path: &mut Vec<Rc<RefCell<Node>>>, threshold: u32) -> u32
@@ -65,6 +81,7 @@ impl Algo
             return u32::max_value();
         }
 
+        self.t_complex += 1;
         let node = path.last().unwrap();
         let curr_f = node.borrow().state.f;
 
@@ -78,9 +95,14 @@ impl Algo
         }
         let mut lowest_f = u32::max_value();
         let childs: BinaryHeap<Rc<RefCell<Node>>> = Node::generate_childs(Rc::clone(node)).into_iter().map(|c| {
-            c.borrow_mut().update_state(&self.goal, self.h_type);
+            c.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
             Rc::clone(&c)
         }).collect();
+        let s_complex = path.len() as u64 + childs.len() as u64;
+        if s_complex > self.s_complex
+        {
+            self.s_complex = s_complex;
+        }
         for child in childs
         {
             if !path.contains(&child)
@@ -105,6 +127,7 @@ impl Algo
     {
         let mut threshold = self.initial_node.state.h as u32;
         let mut path = vec![Rc::new(RefCell::new(self.initial_node.clone()))];
+        self.s_complex += 1;
 
         loop
         {
@@ -120,6 +143,12 @@ impl Algo
             else
             {
                 threshold = recurs_res;
+                println!("New threshold: {}", threshold);
+                if self.weight > 1
+                {
+                    self.weight -= 1;
+                }
+                println!("New weight: {}", self.weight);
             }
         }
     }

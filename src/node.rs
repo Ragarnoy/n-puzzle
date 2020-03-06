@@ -71,13 +71,13 @@ impl Node
         ret
     }
 
-    pub fn update_state(&mut self, goal: &Grid, h_type: HType)
+    pub fn update_state(&mut self, goal: &Grid, h_type: HType, weight: u32)
     {
         match h_type
         {
-            HType::Hamming => self.state.update_hamming(&self.grid, goal),
-            HType::Manhattan => self.state.update_manhattan(&self.grid, goal),
-            HType::LinearManhattan => self.state.update_linear_manhattan(&self.grid, goal)
+            HType::Hamming => self.state.update_hamming(&self.grid, goal, weight),
+            HType::Manhattan => self.state.update_manhattan(&self.grid, goal, weight),
+            HType::LinearManhattan => self.state.update_linear_manhattan(&self.grid, goal, weight)
         }
     }
 

@@ -2,6 +2,8 @@ use std::fmt;
 use utils::coord::Coord;
 use utils::snail_sort;
 use std::hash::{Hash, Hasher};
+use rand::{self, Rng};
+use crate::puzzle_gen::create_snail_goal;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Move
@@ -14,6 +16,18 @@ pub enum Move
 
 impl Move
 {
+    pub fn from(from: u8) -> Self
+    {
+        match from
+        {
+            0 => Self::Up,
+            1 => Self::Down,
+            2 => Self::Right,
+            3 => Self::Left,
+            _ => Self::Up
+        }
+    }
+
     pub fn apply(&self, coord: &mut Coord)
     {
         match self
@@ -93,6 +107,17 @@ impl Grid
             map,
             lines
         }
+    }
+
+    pub fn new_random(lines: u8) -> Self
+    {
+        let mut rng = rand::thread_rng();
+        let mut puzzle = Self::new(create_snail_goal(lines), lines);
+        for i in 0..(512 * lines as u128)
+        {
+            puzzle = puzzle.move_zero(Move::from(rng.gen_range(0, 4))).unwrap_or(puzzle);
+        }
+        puzzle
     }
 
     pub fn get_lines(&self) -> u8
@@ -392,5 +417,12 @@ mod tests
                                 8, 4, 0, 
                                 7, 6, 5), 3);
         println!("{}", test.solvable());
+    }
+
+    #[test]
+    fn new_random()
+    {
+        let puzzle = Grid::new_random(4);
+        println!("{}", puzzle);
     }
 }

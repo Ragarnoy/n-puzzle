@@ -80,21 +80,21 @@ impl State
         }
     }
     
-    pub fn update_hamming(&mut self, grid: &Grid, goal: &Grid)
+    pub fn update_hamming(&mut self, grid: &Grid, goal: &Grid, weight: u32)
     {
-        self.h = grid.hamming(goal);
+        self.h = grid.hamming(goal);// * weight as u16;
         self.f = self.g + self.h as u32;
     }
     
-    pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid)
+    pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32)
     {
-        self.h = grid.manhattan(goal);
+        self.h = grid.manhattan(goal);// * weight as u16;
         self.f = self.g + self.h as u32;
     }
     
-    pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid)
+    pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32)
     {
-        self.h = grid.linear_manhattan(goal);
+        self.h = grid.linear_manhattan(goal);// * weight as u16;
         self.f = self.g + self.h as u32;
     }
 }
