@@ -19,6 +19,21 @@ pub struct Algo
     nb_popped: usize
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum AType
+{
+    AStar,
+    IDAStar
+}
+
+impl Default for AType
+{
+    fn default() -> Self
+    {
+        Self::AStar
+    }
+}
+
 impl Algo
 {
     pub fn new(initial_node: Node, goal: Grid, h_type: HType, column: u8) -> Self
