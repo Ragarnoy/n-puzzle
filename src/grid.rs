@@ -176,7 +176,7 @@ impl Grid
         let mut solve = snail_sort(&self.map, self.lines);
         let mut inv_cout: u16 = 0;
 
-        solve.reverse();
+        // solve.reverse();
         while !solve.is_empty()
         {
             let i = solve.remove(0);

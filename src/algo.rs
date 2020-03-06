@@ -51,7 +51,7 @@ impl AType
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, h_type: HType, max_weight: u32) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType, max_weight: u32, min_weight: u32) -> Self
     {
         Algo
         {
@@ -60,7 +60,7 @@ impl Algo
             h_type,
             t_complex: 0,
             s_complex: 0,
-            weight: 1,
+            weight: min_weight,
             max_weight
         }
     }
@@ -152,7 +152,8 @@ impl Algo
     pub fn resolve(&mut self) -> bool
     {
         let mut threshold = self.path.last().unwrap().borrow().state.h as u64;
-        let max_weight = 10;
+        let mut threshold_change_count = 0;
+        let mut threshold_change_max = 1;
         self.s_complex += 1;
 
         loop
@@ -169,10 +170,16 @@ impl Algo
             else
             {
                 threshold = recurs_res;
+                threshold_change_count += 1;
                 println!("New threshold: {}", threshold);
-                if self.weight < self.max_weight
+                if threshold_change_count >= threshold_change_max && self.weight < self.max_weight
                 {
                     self.weight += 1;
+                    if self.weight % 5 == 0
+                    {
+                        threshold_change_max += 1;
+                    }
+                    threshold_change_count = 0;
                 }
                 println!("New weight: {}", self.weight);
             }
