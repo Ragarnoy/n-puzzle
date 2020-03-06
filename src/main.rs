@@ -231,7 +231,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         Grid::new(puzzle_gen::random_puzzle(lines), lines)
     };
     println!("{}", grid);
-    if !grid.solvable()
+    if !matches.is_present("random") && !grid.solvable()
     {
         error_handler(Err(String::from("Grid is unsolvable !")))
     }
