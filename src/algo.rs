@@ -3,7 +3,7 @@ use crate::{
     node::Node
 };
 use std::{
-    collections::BinaryHeap,
+    collections::{BinaryHeap, HashSet},
     rc::Rc,
     cell::RefCell,
 };
@@ -11,7 +11,7 @@ use std::{
 pub struct Algo
 {
     open_list: BinaryHeap<Rc<RefCell<Node>>>,
-    closed_list: Vec<Rc<RefCell<Node>>>,
+    closed_list: HashSet<Node>,
     path: Vec<Rc<RefCell<Node>>>,
     solution: Option<Rc<RefCell<Node>>>,
     goal: Grid,
@@ -63,7 +63,7 @@ impl Algo
         Algo
         {
             open_list,
-            closed_list: Vec::new(),
+            closed_list: HashSet::new(),
             path: vec![initial_node],
             solution: None,
             goal,
@@ -244,10 +244,11 @@ impl Algo
                 self.solution = Some(node);
                 return true;
             }
-            self.closed_list.push(Rc::clone(&node));
+            self.closed_list.insert(node.borrow().clone());
             for child in Node::generate_childs(node)
             {
-                if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)
+                // if self.closed_list.iter().any(|n| n.grid == child.borrow().grid)
+                if self.closed_list.contains(&child.borrow())
                 {
                     continue;
                 }
