@@ -2,6 +2,7 @@ use std::cmp::{Ordering, Ord};
 use std::rc::Rc;
 use std::cell::RefCell;
 use crate::{state::State, grid::{Grid, HType}};
+use std::hash::{Hash, Hasher};
 
 #[derive(Eq, Clone, Debug)]
 pub struct Node
@@ -9,6 +10,14 @@ pub struct Node
     pub grid: Grid,
     pub state: State,
     pub parent: Option<Rc<RefCell<Node>>>,
+}
+
+impl Hash for Node
+{
+    fn hash<H: Hasher>(&self, state: &mut H)
+    {
+        self.grid.hash(state);
+    }
 }
 
 impl PartialEq for Node

@@ -1,6 +1,7 @@
 use std::fmt;
 use utils::coord::Coord;
 use utils::snail_sort;
+use std::hash::{Hash, Hasher};
 
 #[derive(Copy, Clone, Debug)]
 pub enum Move
@@ -56,13 +57,31 @@ impl HType
     }
 }
 
-#[derive(Eq, PartialEq, Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 pub struct Grid
 {
     map: Vec<u16>,
     z_pos: u16,
     lines: u8,
 }
+
+impl Hash for Grid
+{
+    fn hash<H: Hasher>(&self, state: &mut H)
+    {
+        self.map.hash(state);
+    }
+}
+
+impl PartialEq for Grid
+{
+    fn eq(&self, other: &Self) -> bool
+    {
+        self.map == other.map
+    }
+}
+
+impl Eq for Grid {}
 
 impl Grid
 {
