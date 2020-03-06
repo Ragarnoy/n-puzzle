@@ -243,10 +243,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     };
     let a_type = error_handler(AType::from_str_or_default(matches.value_of("algorithm")));
     let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
-    let mut initial_node = Node::new(State::default(), grid);
+    // let (nb_col, grid) = error_handler(parser(content));
+    let mut initial_node = Node::new(State::default(), grid.clone());
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
+    let mut goal_node = Node::new(State::default(), goal.clone());
     initial_node.update_state(&goal, h_type, 1);
-    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type);
+    goal_node.update_state(&grid, h_type, 1);
+    let mut algo0 = Algo::new(initial_node.clone(), goal.clone(), h_type, None);
+    let mut algo1 = Algo::new(goal_node, grid, h_type, Some(Arc::new(Mutex::new(algo0))));
+    algo0.set_other(Some(Arc::new(Mutex::new(algo1))));
     let path = algo.resolve();
     if let Some(end) = path.last()
     {

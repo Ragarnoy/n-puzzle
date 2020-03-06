@@ -5,17 +5,21 @@ use crate::{
 use std::{
     collections::BinaryHeap,
     rc::Rc,
-    cell::RefCell
+    cell::RefCell,
+    time::{Duration, Instant},
+    sync::{Arc, Mutex}
 };
 
 pub struct Algo
 {
-    initial_node: Node,
+    // initial_node: Node,
+    path: Vec<Rc<RefCell<Node>>>,
     goal: Grid,
     h_type: HType,
     t_complex: u64,
     s_complex: u64,
-    weight: u32
+    weight: u32,
+    other: Option<Arc<Mutex<Self>>>
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -49,18 +53,21 @@ impl AType
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, h_type: HType) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType, other: Option<Arc<Mutex<Self>>>) -> Self
     {
-        let weight = initial_node.state.h as u32 / 2;
+        let weight = 1;
+        // let weight = initial_node.state.h as u32 / 2;
 
         Algo
         {
-            initial_node,
+            path: vec![Rc::new(RefCell::new(initial_node))],
+            // initial_node,
             goal,
             h_type,
             t_complex: 0,
             s_complex: 0,
-            weight
+            weight,
+            other
         }
     }
 
@@ -74,15 +81,21 @@ impl Algo
         self.t_complex
     }
 
-    fn explore_node(&mut self, path: &mut Vec<Rc<RefCell<Node>>>, threshold: u32) -> u32
+    pub fn set_other(&mut self, other: Option<Arc<Mutex<Self>>>)
     {
-        if path.last().is_none()
+        self.other = other;
+    }
+
+    // fn explore_node(&mut self, path: &mut Vec<Rc<RefCell<Node>>>, threshold: u32) -> u32
+    fn explore_node(&mut self, threshold: u32) -> u32
+    {
+        if self.path.last().is_none()
         {
             return u32::max_value();
         }
 
         self.t_complex += 1;
-        let node = path.last().unwrap();
+        let node = self.path.last().unwrap();
         let curr_f = node.borrow().state.f;
 
         if curr_f as u32 > threshold
@@ -93,22 +106,33 @@ impl Algo
         {
             return 0;
         }
+        else if let Some(other) = self.other
+        {
+            let other = other.lock().unwrap();
+            if other.path.contains(node)
+            {
+                return 0;
+            }
+        }
         let mut lowest_f = u32::max_value();
         let childs: BinaryHeap<Rc<RefCell<Node>>> = Node::generate_childs(Rc::clone(node)).into_iter().map(|c| {
+            let update_time = Instant::now();
             c.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
+            // println!("DEBUG::algo::explore_node: Time to update state of child: {:#?}", update_time.elapsed());
             Rc::clone(&c)
         }).collect();
-        let s_complex = path.len() as u64 + childs.len() as u64;
+        let s_complex = self.path.len() as u64 + childs.len() as u64;
         if s_complex > self.s_complex
         {
             self.s_complex = s_complex;
         }
         for child in childs
         {
-            if !path.contains(&child)
+            if !self.path.contains(&child)
             {
-                path.push(Rc::clone(&child));
-                let recurs_res = self.explore_node(path, threshold);
+                self.path.push(Rc::clone(&child));
+                // let recurs_res = self.explore_node(self.path, threshold);
+                let recurs_res = self.explore_node(threshold);
                 if recurs_res == 0
                 {
                     return 0;
@@ -117,7 +141,7 @@ impl Algo
                 {
                     lowest_f = recurs_res;
                 }
-                path.pop();
+                self.path.pop();
             }
         }
         return lowest_f;
@@ -125,16 +149,18 @@ impl Algo
 
     pub fn resolve(&mut self) -> Vec<Rc<RefCell<Node>>>
     {
-        let mut threshold = self.initial_node.state.h as u32;
-        let mut path = vec![Rc::new(RefCell::new(self.initial_node.clone()))];
+        let mut threshold = self.path.last().unwrap().borrow().state.h as u32;
+        // let mut path = vec![Rc::new(RefCell::new(self.initial_node.clone()))];
+        let max_weight = 10;
         self.s_complex += 1;
 
         loop
         {
-            let recurs_res = self.explore_node(&mut path, threshold);
+            // let recurs_res = self.explore_node(&mut path, threshold);
+            let recurs_res = self.explore_node(threshold);
             if recurs_res == 0
             {
-                return path;
+                return self.path;
             }
             else if recurs_res == u32::max_value()
             {
@@ -144,15 +170,14 @@ impl Algo
             {
                 threshold = recurs_res;
                 println!("New threshold: {}", threshold);
-                if self.weight > 1
+                if self.weight + 1 < max_weight
                 {
-                    self.weight -= 1;
+                    self.weight += 1;
                 }
                 println!("New weight: {}", self.weight);
             }
         }
     }
-
 }
 
 #[cfg(test)]
