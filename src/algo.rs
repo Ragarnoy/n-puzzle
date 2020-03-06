@@ -10,9 +10,13 @@ use std::{
 
 pub struct Algo
 {
+    open_list: BinaryHeap<Rc<RefCell<Node>>>,
+    closed_list: Vec<Rc<RefCell<Node>>>,
     path: Vec<Rc<RefCell<Node>>>,
+    solution: Option<Rc<RefCell<Node>>>,
     goal: Grid,
     h_type: HType,
+    a_type: AType,
     t_complex: u64,
     s_complex: u64,
     weight: u32,
@@ -41,8 +45,8 @@ impl AType
         match input
         {
             None => Ok(Self::default()),
-            Some("idastar") => Ok(Self::AStar),
-            Some("astar") => Ok(Self::IDAStar),
+            Some("astar") => Ok(Self::AStar),
+            Some("idastar") => Ok(Self::IDAStar),
             Some(h) => Err(format!("This algorithmic function does not exist: {}", h))
         }
     }
@@ -50,13 +54,21 @@ impl AType
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, h_type: HType, max_weight: u32, min_weight: u32) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType, a_type: AType, max_weight: u32, min_weight: u32) -> Self
     {
+        let initial_node = Rc::new(RefCell::new(initial_node));
+        let mut open_list = BinaryHeap::new();
+        open_list.push(Rc::clone(&initial_node));
+
         Algo
         {
-            path: vec![Rc::new(RefCell::new(initial_node))],
+            open_list,
+            closed_list: Vec::new(),
+            path: vec![initial_node],
+            solution: None,
             goal,
             h_type,
+            a_type,
             t_complex: 0,
             s_complex: 0,
             weight: min_weight,
@@ -74,7 +86,19 @@ impl Algo
         self.t_complex
     }
 
-    pub fn get_total_cost(&self) -> u32
+    pub fn get_total_cost_a_star(&self) -> u32
+    {
+        if let Some(sol) = self.solution.as_ref()
+        {
+            sol.borrow().state.g
+        }
+        else
+        {
+            0
+        }
+    }
+
+    pub fn get_total_cost_ida_star(&self) -> u32
     {
         if let Some(node) = self.path.last()
         {
@@ -86,7 +110,33 @@ impl Algo
         }
     }
 
+    pub fn get_total_cost(&self) -> u32
+    {
+        match self.a_type
+        {
+            AType::AStar => self.get_total_cost_a_star(),
+            AType::IDAStar => self.get_total_cost_ida_star()
+        }
+    }
+
     pub fn print_steps(&self)
+    {
+        match self.a_type
+        {
+            AType::AStar => self.print_steps_a_star(),
+            AType::IDAStar => self.print_steps_ida_star()
+        }
+    }
+
+    pub fn print_steps_a_star(&self)
+    {
+        if let Some(sol) = self.solution.as_ref()
+        {
+            sol.borrow().print_steps();
+        }
+    }
+
+    pub fn print_steps_ida_star(&self)
     {
         if !self.path.is_empty()
         {
@@ -147,7 +197,7 @@ impl Algo
         return lowest_f;
     }
 
-    pub fn resolve(&mut self) -> bool
+    pub fn resolve_ida_star(&mut self) -> bool
     {
         let mut threshold = self.path.last().unwrap().borrow().state.h as u64;
         let mut threshold_change_count = 0;
@@ -181,6 +231,70 @@ impl Algo
                 }
                 println!("New weight: {}", self.weight);
             }
+        }
+    }
+
+    pub fn resolve_a_star(&mut self) -> bool
+    {
+        while let Some(node) = self.open_list.pop()
+        {
+            self.t_complex += 1;
+            if node.borrow().state.h == 0 && node.borrow().grid == self.goal
+            {
+                self.solution = Some(node);
+                return true;
+            }
+            self.closed_list.push(Rc::clone(&node));
+            for child in Node::generate_childs(node)
+            {
+                if self.closed_list.iter().any(|n| n.borrow().grid == child.borrow().grid)
+                {
+                    continue;
+                }
+                // Try to swap the two conditions below (and do thefor loop directly, no if around it)
+                else if self.open_list.iter().any(|n| *n == child)
+                {
+                    if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                    {
+                        continue;
+                    }
+                    let child_g = child.borrow().state.g;
+                    let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
+
+                    for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                    {
+                        let new_f = node.borrow().state.h as u64 + child_g as u64;
+                        node.borrow_mut().state.g = child_g;
+                        node.borrow_mut().state.f = new_f;
+                        node.borrow_mut().parent = Some(Rc::clone(&child_parent));
+                    }
+                }
+                else
+                {
+                    child.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
+                    if child.borrow().state.h == 0
+                    {
+                        self.solution = Some(child);
+                        return true;
+                    }
+                    self.open_list.push(child)
+                }
+            }
+            let max_states = self.open_list.len() + self.closed_list.len();
+            if self.s_complex < max_states as u64
+            {
+                self.s_complex = max_states as u64;
+            }
+        }
+        false
+    }
+
+    pub fn resolve(&mut self) -> bool
+    {
+        match self.a_type
+        {
+            AType::AStar => self.resolve_a_star(),
+            AType::IDAStar => self.resolve_ida_star()
         }
     }
 }

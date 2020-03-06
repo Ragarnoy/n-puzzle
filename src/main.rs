@@ -246,7 +246,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
     initial_node.update_state(&goal, h_type, 1);
     // TODO: Replace the last parameter (10) by the real value from the cmdline
-    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, lines as u32, lines as u32);
+    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, a_type, lines as u32, lines as u32);
     if algo.resolve()
     {
         println!("A solution was found for the initial state you gave\nHere are the results:\n");
