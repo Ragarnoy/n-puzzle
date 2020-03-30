@@ -3,6 +3,7 @@ use crate::{
     node::Node
 };
 use std::{
+    fmt,
     collections::{BinaryHeap, HashSet},
     rc::Rc,
     cell::RefCell,
@@ -38,6 +39,17 @@ impl Default for AType
     }
 }
 
+impl fmt::Display for AType
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self
+        {
+            Self::AStar => write!(f, "A*"),
+            Self::IDAStar => write!(f, "IDA*")
+        }
+    }
+}
+
 impl AType
 {
     pub fn from_str_or_default(input: Option<&str>) -> Result<Self, String>
@@ -54,7 +66,7 @@ impl AType
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, h_type: HType, a_type: AType, max_weight: u32, min_weight: u32) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType, a_type: AType, min_weight: u32, max_weight: u32) -> Self
     {
         let initial_node = Rc::new(RefCell::new(initial_node));
         let mut open_list = BinaryHeap::new();
@@ -119,6 +131,11 @@ impl Algo
         }
     }
 
+    pub fn get_weight(&self) -> u32
+    {
+        self.weight
+    }
+
     pub fn print_steps(&self)
     {
         match self.a_type
@@ -169,7 +186,7 @@ impl Algo
         }
         let mut lowest_f = u64::max_value();
         let childs: BinaryHeap<Rc<RefCell<Node>>> = Node::generate_childs(Rc::clone(node)).into_iter().map(|c| {
-            c.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
+            c.borrow_mut().update_state(&self.goal, self.h_type, self.weight as u32);
             Rc::clone(&c)
         }).collect();
         let s_complex = self.path.len() as u64 + childs.len() as u64;
@@ -270,7 +287,7 @@ impl Algo
                 }
                 else
                 {
-                    child.borrow_mut().update_state(&self.goal, self.h_type, self.weight);
+                    child.borrow_mut().update_state(&self.goal, self.h_type, self.weight as u32);
                     if child.borrow().state.h == 0
                     {
                         self.solution = Some(child);

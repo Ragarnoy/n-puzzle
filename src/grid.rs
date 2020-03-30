@@ -1,5 +1,7 @@
-use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::{
+    fmt,
+    hash::{Hash, Hasher}
+};
 use utils::{snail_sort, coord::Coord};
 use rand::{self, Rng};
 use crate::puzzle_gen::create_snail_goal;
@@ -52,6 +54,18 @@ impl Default for HType
     fn default() -> Self
     {
         Self::Hamming
+    }
+}
+
+impl fmt::Display for HType
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self
+        {
+            Self::Hamming => write!(f, "Hamming"),
+            Self::Manhattan => write!(f, "Manhattan"),
+            Self::LinearManhattan => write!(f, "Linear-Manhattan")
+        }
     }
 }
 
