@@ -53,7 +53,7 @@ impl Default for HType
 {
     fn default() -> Self
     {
-        Self::Hamming
+        Self::LinearManhattan
     }
 }
 
