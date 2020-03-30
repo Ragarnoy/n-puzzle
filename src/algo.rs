@@ -251,8 +251,21 @@ impl Algo
 
     pub fn resolve_a_star(&mut self) -> bool
     {
+        let mut poped_node_count = 0;
+        let mut poped_node_max = 10;
+
         while let Some(node) = self.open_list.pop()
         {
+            poped_node_count += 1;
+            if poped_node_count >= poped_node_max && self.weight < self.max_weight
+            {
+                self.weight += 1;
+                if self.weight % 5 == 0
+                {
+                    poped_node_max += 10;
+                }
+                poped_node_count = 0;
+            }
             self.t_complex += 1;
             if node.borrow().state.h == 0 && node.borrow().grid == self.goal
             {
