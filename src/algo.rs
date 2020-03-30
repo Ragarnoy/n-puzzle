@@ -68,6 +68,7 @@ impl AType
 
 impl Algo
 {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(initial_node: Node, goal: Grid, h_type: HType, a_type: AType, min_weight: u32, max_weight: u32, g_max: u32, greedy: bool) -> Self
     {
         let initial_node = Rc::new(RefCell::new(initial_node));
@@ -108,8 +109,7 @@ impl Algo
         {
             sol.borrow().state.g
         }
-        else
-        {
+        else {
             0
         }
     }
@@ -120,8 +120,7 @@ impl Algo
         {
             node.borrow().state.g
         }
-        else
-        {
+        else {
             0
         }
     }
@@ -229,7 +228,7 @@ impl Algo
 
     pub fn resolve_ida_star(&mut self) -> bool
     {
-        let mut threshold = self.path.last().unwrap().borrow().state.h as u64;
+        let mut threshold = u64::from(self.path.last().unwrap().borrow().state.h);
         let mut threshold_change_count = 0;
         let mut threshold_change_max = 1;
         self.s_complex += 1;
@@ -245,8 +244,7 @@ impl Algo
             {
                 return false;
             }
-            else
-            {
+            else {
                 threshold = recurs_res;
                 threshold_change_count += 1;
                 if threshold_change_count >= threshold_change_max && self.weight < self.max_weight
@@ -286,7 +284,7 @@ impl Algo
                 return true;
             }
             self.closed_list.insert(node.borrow().clone());
-            if node.borrow().state.g + 1 <= self.g_max
+            if node.borrow().state.g < self.g_max
             {
                 for child in Node::generate_childs(node)
                 {
@@ -307,14 +305,13 @@ impl Algo
 
                         for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
                         {
-                            let new_f = node.borrow().state.h as u64 + child_g as u64;
+                            let new_f = u64::from(node.borrow().state.h) + u64::from(child_g);
                             node.borrow_mut().state.g = child_g;
                             node.borrow_mut().state.f = new_f;
                             node.borrow_mut().parent = Some(Rc::clone(&child_parent));
                         }
                     }
-                    else
-                    {
+                    else {
                         child.borrow_mut().update_state(&self.goal, self.h_type, self.weight as u32, self.greedy);
                         if child.borrow().state.h == 0
                         {
