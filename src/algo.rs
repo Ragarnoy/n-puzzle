@@ -35,7 +35,7 @@ impl Default for AType
 {
     fn default() -> Self
     {
-        Self::AStar
+        Self::IDAStar
     }
 }
 

@@ -191,7 +191,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                     .long("algorithm")
                     .number_of_values(1)
                     .possible_values(&["astar", "idastar"])
-                    .help("Choose algorithm. Default depends on the submitted grid."))
+                    .help("Choose algorithm. Default is idastar."))
                 .arg(Arg::with_name("weight")
                     .short("w")
                     .long("weight")
