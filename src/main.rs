@@ -232,20 +232,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     let greedy = matches.is_present("greedy");
     let g_max: u32 = match matches.value_of("uniform")
     {
+        Some(_) if greedy => u32::max_value(),
         Some(x) => x.parse().unwrap(),
         None => u32::max_value(),
     };
     let max_weight: u32 = match matches.value_of("weight")
     {
+        Some(_) if greedy => 1,
         Some(x) => x.parse().unwrap(),
+        None if greedy => 1,
         None => (u32::from(lines) / 2 + 1),
     };
     let a_type = error_handler(AType::from_str_or_default(matches.value_of("algorithm")));
+    if greedy && a_type == AType::IDAStar
+    {
+        error_handler(Err(String::from("It's not allowed to perform greedy search with IDA* algorithm\nPlease select another algorithm or remove the use of option `-g`")))
+    }
     let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
     let mut initial_node = Node::new(State::default(), grid.clone());
 	let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
-    initial_node.update_state(&goal, h_type, 1);
-    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, a_type, 1, max_weight);
+    initial_node.update_state(&goal, h_type, 1, greedy);
+    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, a_type, 1, max_weight, g_max, greedy);
     if algo.resolve()
     {
         println!("A solution was found for the initial state you gave\nHere are the results:\n");

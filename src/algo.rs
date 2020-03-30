@@ -21,10 +21,12 @@ pub struct Algo
     t_complex: u64,
     s_complex: u64,
     weight: u32,
-    max_weight: u32
+    max_weight: u32,
+    g_max: u32,
+    greedy: bool
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AType
 {
     AStar,
@@ -66,7 +68,7 @@ impl AType
 
 impl Algo
 {
-    pub fn new(initial_node: Node, goal: Grid, h_type: HType, a_type: AType, min_weight: u32, max_weight: u32) -> Self
+    pub fn new(initial_node: Node, goal: Grid, h_type: HType, a_type: AType, min_weight: u32, max_weight: u32, g_max: u32, greedy: bool) -> Self
     {
         let initial_node = Rc::new(RefCell::new(initial_node));
         let mut open_list = BinaryHeap::new();
@@ -84,7 +86,9 @@ impl Algo
             t_complex: 0,
             s_complex: 0,
             weight: min_weight,
-            max_weight
+            max_weight,
+            g_max,
+            greedy
         }
     }
 
@@ -165,11 +169,11 @@ impl Algo
         }
     }
 
-    fn explore_node(&mut self, threshold: u64) -> u64
+    fn explore_node(&mut self, threshold: u64) -> (u64, bool)
     {
         if self.path.last().is_none()
         {
-            return u64::max_value();
+            return (u64::max_value(), false);
         }
 
         self.t_complex += 1;
@@ -178,15 +182,18 @@ impl Algo
 
         if curr_f > threshold
         {
-            return curr_f;
+            return (curr_f, false);
         }
         else if node.borrow().state.h == 0
         {
-            return 0;
+            return (0, false);
         }
-        let mut lowest_f = u64::max_value();
+        else if node.borrow().state.g >= self.g_max
+        {
+            return (curr_f, true);
+        }
         let childs: BinaryHeap<Rc<RefCell<Node>>> = Node::generate_childs(Rc::clone(node)).into_iter().map(|c| {
-            c.borrow_mut().update_state(&self.goal, self.h_type, self.weight as u32);
+            c.borrow_mut().update_state(&self.goal, self.h_type, self.weight as u32, self.greedy);
             Rc::clone(&c)
         }).collect();
         let s_complex = self.path.len() as u64 + childs.len() as u64;
@@ -194,24 +201,30 @@ impl Algo
         {
             self.s_complex = s_complex;
         }
+        let mut lowest_f = u64::max_value();
+        let mut g_max_reached = false;
         for child in childs
         {
             if !self.path.contains(&child)
             {
                 self.path.push(Rc::clone(&child));
-                let recurs_res = self.explore_node(threshold);
+                let (recurs_res, g_max_reached_res) = self.explore_node(threshold);
                 if recurs_res == 0
                 {
-                    return 0;
+                    return (0, false);
                 }
                 else if recurs_res < lowest_f
                 {
                     lowest_f = recurs_res;
                 }
+                if !g_max_reached
+                {
+                    g_max_reached = g_max_reached_res;
+                }
                 self.path.pop();
             }
         }
-        return lowest_f;
+        (lowest_f, g_max_reached)
     }
 
     pub fn resolve_ida_star(&mut self) -> bool
@@ -223,12 +236,12 @@ impl Algo
 
         loop
         {
-            let recurs_res = self.explore_node(threshold);
+            let (recurs_res, g_max_reached) = self.explore_node(threshold);
             if recurs_res == 0
             {
                 return true;
             }
-            else if recurs_res == u64::max_value()
+            else if recurs_res == u64::max_value() || g_max_reached
             {
                 return false;
             }
@@ -273,40 +286,43 @@ impl Algo
                 return true;
             }
             self.closed_list.insert(node.borrow().clone());
-            for child in Node::generate_childs(node)
+            if node.borrow().state.g + 1 <= self.g_max
             {
-                // if self.closed_list.iter().any(|n| n.grid == child.borrow().grid)
-                if self.closed_list.contains(&child.borrow())
+                for child in Node::generate_childs(node)
                 {
-                    continue;
-                }
-                // Try to swap the two conditions below (and do thefor loop directly, no if around it)
-                else if self.open_list.iter().any(|n| *n == child)
-                {
-                    if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                    // if self.closed_list.iter().any(|n| n.grid == child.borrow().grid)
+                    if self.closed_list.contains(&child.borrow())
                     {
                         continue;
                     }
-                    let child_g = child.borrow().state.g;
-                    let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
+                    // Try to swap the two conditions below (and do thefor loop directly, no if around it)
+                    else if self.open_list.iter().any(|n| *n == child)
+                    {
+                        if self.open_list.iter().any(|n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                        {
+                            continue;
+                        }
+                        let child_g = child.borrow().state.g;
+                        let child_parent = Rc::clone(child.borrow().parent.as_ref().unwrap());
 
-                    for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
-                    {
-                        let new_f = node.borrow().state.h as u64 + child_g as u64;
-                        node.borrow_mut().state.g = child_g;
-                        node.borrow_mut().state.f = new_f;
-                        node.borrow_mut().parent = Some(Rc::clone(&child_parent));
+                        for node in self.open_list.iter().filter(|&n| *n == child && n.borrow().state.g < child.borrow().state.g)
+                        {
+                            let new_f = node.borrow().state.h as u64 + child_g as u64;
+                            node.borrow_mut().state.g = child_g;
+                            node.borrow_mut().state.f = new_f;
+                            node.borrow_mut().parent = Some(Rc::clone(&child_parent));
+                        }
                     }
-                }
-                else
-                {
-                    child.borrow_mut().update_state(&self.goal, self.h_type, self.weight as u32);
-                    if child.borrow().state.h == 0
+                    else
                     {
-                        self.solution = Some(child);
-                        return true;
+                        child.borrow_mut().update_state(&self.goal, self.h_type, self.weight as u32, self.greedy);
+                        if child.borrow().state.h == 0
+                        {
+                            self.solution = Some(child);
+                            return true;
+                        }
+                        self.open_list.push(child)
                     }
-                    self.open_list.push(child)
                 }
             }
             let max_states = self.open_list.len() + self.closed_list.len();
