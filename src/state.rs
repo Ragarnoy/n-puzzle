@@ -20,20 +20,16 @@ impl PartialOrd for State
         {
             Ordering::Less
         }
-        else
+        else if (other.h > self.h) || (other.h == self.h && other.g > self.g)
         {
-            if (other.h > self.h) || (other.h == self.h && other.g > self.g)
-            {
-                Ordering::Greater
-            }
-            else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
-            {
-                Ordering::Less
-            }
-            else
-            {
-                Ordering::Equal
-            }
+            Ordering::Greater
+        }
+        else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
+        {
+            Ordering::Less
+        }
+        else {
+            Ordering::Equal
         })
     }
 }
@@ -50,20 +46,16 @@ impl Ord for State
         {
             Ordering::Less
         }
-        else
+        else if (other.h > self.h) || (other.h == self.h && other.g > self.g)
         {
-            if (other.h > self.h) || (other.h == self.h && other.g > self.g)
-            {
-                Ordering::Greater
-            }
-            else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
-            {
-                Ordering::Less
-            }
-            else
-            {
-                Ordering::Equal
-            }
+            Ordering::Greater
+        }
+        else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
+        {
+            Ordering::Less
+        }
+        else {
+            Ordering::Equal
         }
     }
 }

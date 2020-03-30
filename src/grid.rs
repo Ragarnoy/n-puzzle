@@ -2,7 +2,7 @@ use std::{
     fmt,
     hash::{Hash, Hasher}
 };
-use utils::{snail_sort, coord::Coord};
+use utils::coord::Coord;
 use rand::{self, Rng};
 use crate::puzzle_gen::create_snail_goal;
 
@@ -29,7 +29,7 @@ impl Move
         }
     }
 
-    pub fn apply(&self, coord: &mut Coord)
+    pub fn apply(self, coord: &mut Coord)
     {
         match self
         {
@@ -126,7 +126,7 @@ impl Grid
     {
         let mut rng = rand::thread_rng();
         let mut puzzle = Self::new(create_snail_goal(lines), lines);
-        for i in 0..(512 * lines as u128)
+        for _ in 0..(512 * lines as u128)
         {
             puzzle = puzzle.move_zero(Move::from(rng.gen_range(0, 4))).unwrap_or(puzzle);
         }
@@ -136,11 +136,6 @@ impl Grid
     pub fn get_lines(&self) -> u8
     {
         self.lines
-    }
-
-    pub fn get_map(&self) -> Vec<u16>
-    {
-        self.map.clone()
     }
 
     pub fn move_zero(&self, mov: Move) -> Option<Self>
@@ -178,8 +173,7 @@ impl Grid
             {
                 acc + 1
             }
-            else
-            {
+            else {
                 acc
             }
         })
@@ -214,21 +208,18 @@ impl Grid
             {
                 ret = inv_cout % 2 != 0;
             }
-            else
-            {
-                ret = !(inv_cout % 2 != 0);
+            else {
+                ret = inv_cout % 2 == 0;
             }
         }
-        else
-        {
+        else {
             ret = inv_cout % 2 != 0;
         }
     if self.lines < 6
     {
         ret
     }
-    else
-    {
+    else {
         !ret
     }
     }
@@ -243,8 +234,7 @@ impl Grid
             {
                 acc + ((goal_cord.x - self_cord.x).abs() as u32 + (goal_cord.y - self_cord.y).abs() as u32)
             }
-            else
-            {
+            else {
                 acc
             }
         })
@@ -260,8 +250,7 @@ impl Grid
             {
                 Some((self_cord, goal_cord))
             }
-            else
-            {
+            else {
                 None
             }
         }).collect()
@@ -274,7 +263,7 @@ impl Grid
 
         while let Some((f, g)) = conflict.pop()
         {
-            for (o, p) in conflict.iter().filter(|(o, p)| (f.x == g.x && f.x == o.x && g.x == p.x) || (f.y == g.y && f.y == o.y && g.y == p.y))
+            for (_, p) in conflict.iter().filter(|(o, p)| (f.x == g.x && f.x == o.x && g.x == p.x) || (f.y == g.y && f.y == o.y && g.y == p.y))
             {
                 if (g.x - p.x) > 0 || (g.y - p.y) > 0
                 {
@@ -293,6 +282,7 @@ impl Grid
 
 impl fmt::Display for Grid
 {
+    #[allow(clippy::unit_arg, clippy::let_unit_value)]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
         let len = self.map.len();
@@ -302,12 +292,12 @@ impl fmt::Display for Grid
         {
             result = match x
             {
-                0 => write!(f, "\t{}", "_")?,
+                0 => write!(f, "\t_")?,
                 n => write!(f, "\t{}", n)?
             };
             if (i + 1) % col as usize == 0 && i != 0
             {
-                result = write!(f, "{}", "\n\n")?;
+                result = write!(f, "\n\n")?;
             }
         }
         Ok(result)

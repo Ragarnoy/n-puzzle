@@ -1,3 +1,4 @@
+#![allow(clippy::cast_lossless)]
 #[macro_use]
 extern crate clap;
 extern crate utils;
@@ -7,7 +8,7 @@ mod grid;
 mod node;
 mod puzzle_gen;
 mod algo;
-use clap::{Arg, App, AppSettings, ArgSettings};
+use clap::{Arg, App, AppSettings};
 use std::{path::Path, fs};
 use grid::{Grid, HType};
 use node::Node;
@@ -39,13 +40,12 @@ fn parser(content: String) -> Result<grid::Grid, String>
             Err(_) => return Err(format!("Invalid puzzle size: [{}]", first))
         }
     }
-    else
-    {
-        return Err(format!("There is no way we can resolve an empty puzzle dummy!"));
+    else {
+        return Err("There is no way we can resolve an empty puzzle dummy!".into());
     };
     if nb_col != nb_lines
     {
-        return Err(format!("The size definition and the number of line of the puzzle don't match"));
+        return Err("The size definition and the number of line of the puzzle don't match".into());
     }
     for line in content_lines
     {
@@ -74,8 +74,7 @@ fn parser(content: String) -> Result<grid::Grid, String>
         // of this function so we can safely give ownership to the new `Grid`.
         Ok(Grid::new(ret, nb_lines as u8))
     }
-    else
-    {
+    else {
         Err("Invalid puzzle format".into())
     }
 }
@@ -88,8 +87,7 @@ fn expect_size(nbr: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("Number must be between 2 and 8"))
         }
     }
@@ -104,8 +102,7 @@ fn expect_weight(nbr: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("Number must be between 0 and 100"))
         }
     }
@@ -120,8 +117,7 @@ fn expect_gscore(nbr: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("Number must be between 0 and U32MAX"))
         }
     }
@@ -136,8 +132,7 @@ fn expect_file(file: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("File expected."))
         }
     }
@@ -218,8 +213,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         let content = error_handler(fs::read_to_string(Path::new(matches.value_of("input").expect("Invalid input"))));
         error_handler(parser(content))
     }
-    else
-    {
+    else {
         let lines = matches.value_of("random").unwrap().parse().unwrap();
         Grid::new_random(lines)
     };
@@ -270,8 +264,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         println!("Uniform cost search max cost:\t{}", g_max);
         Ok(())
     }
-    else
-    {
+    else {
         eprintln!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}\n", initial_node.grid, goal);
         eprintln!("As reminder here are the settings you requested:\n");
         eprintln!("Algorithm:\t\t\t{}", a_type);
