@@ -194,24 +194,19 @@ impl Grid
             }
         }
         
-        println!("Inv count = {}", inv_cout);
         if self.lines % 2 == 0
         {
-            println!("Even lines.");
             if blank_bot % 2 == 0
             {
-                println!("Even inverted blank pos.");
                 ret = inv_cout % 2 != 0;
             }
             else
             {
-                println!("Odd inverted blank pos.");
                 ret = !(inv_cout % 2 != 0);
             }
         }
         else
         {
-            println!("Odd lines.");
             ret = inv_cout % 2 != 0;
         }
     if self.lines < 6

@@ -219,7 +219,6 @@ impl Algo
             {
                 threshold = recurs_res;
                 threshold_change_count += 1;
-                println!("New threshold: {}", threshold);
                 if threshold_change_count >= threshold_change_max && self.weight < self.max_weight
                 {
                     self.weight += 1;
@@ -229,7 +228,6 @@ impl Algo
                     }
                     threshold_change_count = 0;
                 }
-                println!("New weight: {}", self.weight);
             }
         }
     }
