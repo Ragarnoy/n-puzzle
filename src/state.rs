@@ -20,20 +20,16 @@ impl PartialOrd for State
         {
             Ordering::Less
         }
-        else
+        else if (other.h > self.h) || (other.h == self.h && other.g > self.g)
         {
-            if (other.h > self.h) || (other.h == self.h && other.g > self.g)
-            {
-                Ordering::Greater
-            }
-            else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
-            {
-                Ordering::Less
-            }
-            else
-            {
-                Ordering::Equal
-            }
+            Ordering::Greater
+        }
+        else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
+        {
+            Ordering::Less
+        }
+        else {
+            Ordering::Equal
         })
     }
 }
@@ -50,20 +46,16 @@ impl Ord for State
         {
             Ordering::Less
         }
-        else
+        else if (other.h > self.h) || (other.h == self.h && other.g > self.g)
         {
-            if (other.h > self.h) || (other.h == self.h && other.g > self.g)
-            {
-                Ordering::Greater
-            }
-            else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
-            {
-                Ordering::Less
-            }
-            else
-            {
-                Ordering::Equal
-            }
+            Ordering::Greater
+        }
+        else if (other.h < self.h) || (other.h == self.h && other.g < self.g)
+        {
+            Ordering::Less
+        }
+        else {
+            Ordering::Equal
         }
     }
 }
@@ -79,23 +71,32 @@ impl State
             f
         }
     }
+
+    fn compute_f(&mut self, greedy: bool)
+    {
+        self.f = self.h as u64;
+        if !greedy
+        {
+            self.f += self.g as u64;
+        }
+    }
     
-    pub fn update_hamming(&mut self, grid: &Grid, goal: &Grid, weight: u32)
+    pub fn update_hamming(&mut self, grid: &Grid, goal: &Grid, weight: u32, greedy: bool)
     {
         self.h = grid.hamming(goal) * weight;
-        self.f = self.g as u64 + self.h as u64;
+        self.compute_f(greedy);
     }
     
-    pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32)
+    pub fn update_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32, greedy: bool)
     {
         self.h = grid.manhattan(goal) * weight;
-        self.f = self.g as u64 + self.h as u64;
+        self.compute_f(greedy);
     }
     
-    pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32)
+    pub fn update_linear_manhattan(&mut self, grid: &Grid, goal: &Grid, weight: u32, greedy: bool)
     {
         self.h = grid.linear_manhattan(goal) * weight;
-        self.f = self.g as u64 + self.h as u64;
+        self.compute_f(greedy);
     }
 }
 

@@ -1,3 +1,4 @@
+#![allow(clippy::cast_lossless)]
 #[macro_use]
 extern crate clap;
 extern crate utils;
@@ -7,7 +8,7 @@ mod grid;
 mod node;
 mod puzzle_gen;
 mod algo;
-use clap::{Arg, App, AppSettings, ArgSettings};
+use clap::{Arg, App, AppSettings};
 use std::{path::Path, fs};
 use grid::{Grid, HType};
 use node::Node;
@@ -39,13 +40,12 @@ fn parser(content: String) -> Result<grid::Grid, String>
             Err(_) => return Err(format!("Invalid puzzle size: [{}]", first))
         }
     }
-    else
-    {
-        return Err(format!("There is no way we can resolve an empty puzzle dummy!"));
+    else {
+        return Err("There is no way we can resolve an empty puzzle dummy!".into());
     };
     if nb_col != nb_lines
     {
-        return Err(format!("The size definition and the number of line of the puzzle don't match"));
+        return Err("The size definition and the number of line of the puzzle don't match".into());
     }
     for line in content_lines
     {
@@ -74,8 +74,7 @@ fn parser(content: String) -> Result<grid::Grid, String>
         // of this function so we can safely give ownership to the new `Grid`.
         Ok(Grid::new(ret, nb_lines as u8))
     }
-    else
-    {
+    else {
         Err("Invalid puzzle format".into())
     }
 }
@@ -88,8 +87,7 @@ fn expect_size(nbr: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("Number must be between 2 and 8"))
         }
     }
@@ -104,8 +102,7 @@ fn expect_weight(nbr: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("Number must be between 0 and 100"))
         }
     }
@@ -120,8 +117,7 @@ fn expect_gscore(nbr: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("Number must be between 0 and U32MAX"))
         }
     }
@@ -136,8 +132,7 @@ fn expect_file(file: String) -> Result<(), String>
         {
             return Ok(())
         }
-        else
-        {
+        else {
             return Err(String::from("File expected."))
         }
     }
@@ -191,7 +186,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
                     .long("algorithm")
                     .number_of_values(1)
                     .possible_values(&["astar", "idastar"])
-                    .help("Choose algorithm. Default depends on the submitted grid."))
+                    .help("Choose algorithm. Default is idastar."))
                 .arg(Arg::with_name("weight")
                     .short("w")
                     .long("weight")
@@ -218,8 +213,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         let content = error_handler(fs::read_to_string(Path::new(matches.value_of("input").expect("Invalid input"))));
         error_handler(parser(content))
     }
-    else
-    {
+    else {
         let lines = matches.value_of("random").unwrap().parse().unwrap();
         Grid::new_random(lines)
     };
@@ -229,24 +223,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         error_handler(Err(String::from("Grid is unsolvable !")))
     }
     let lines = grid.get_lines();
-    let greed = matches.is_present("greedy");
-    let g_score: u32 = match matches.value_of("uniform")
+    let greedy = matches.is_present("greedy");
+    let g_max: u32 = match matches.value_of("uniform")
     {
+        Some(_) if greedy => u32::max_value(),
         Some(x) => x.parse().unwrap(),
-        None => 0,
+        None => u32::max_value(),
     };
-    let max_weight: u8 = match matches.value_of("weight")
+    let max_weight: u32 = match matches.value_of("weight")
     {
+        Some(_) if greedy => 1,
         Some(x) => x.parse().unwrap(),
-        None => (lines / 2 + 1),
+        None if greedy => 1,
+        None => (u32::from(lines) / 2 + 1),
     };
     let a_type = error_handler(AType::from_str_or_default(matches.value_of("algorithm")));
+    if greedy && a_type == AType::IDAStar
+    {
+        error_handler(Err(String::from("It's not allowed to perform greedy search with IDA* algorithm\nPlease select another algorithm or remove the use of option `-g`")))
+    }
     let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
     let mut initial_node = Node::new(State::default(), grid.clone());
-    let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
-    initial_node.update_state(&goal, h_type, 1);
-    // TODO: Replace the last parameter (10) by the real value from the cmdline
-    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, a_type, lines as u32, lines as u32);
+	let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
+    initial_node.update_state(&goal, h_type, 1, greedy);
+    let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, a_type, 1, max_weight, g_max, greedy);
     if algo.resolve()
     {
         println!("A solution was found for the initial state you gave\nHere are the results:\n");
@@ -255,11 +255,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         println!("Amount of moves required:\t{}\n", algo.get_total_cost());
         println!("Complexity in time:\t\t{}\n(number of nodes processed)\n", algo.get_t_complex());
         println!("Complexity in size:\t\t{}\n(number of nodes in memory at the same time)", algo.get_s_complex());
+        println!("Higher weight reached:\t\t{}\n\n", algo.get_weight());
+        println!("As reminder here are the settings you requested:\n");
+        println!("Algorithm:\t\t\t{}", a_type);
+        println!("Heuristic:\t\t\t{}", h_type);
+        println!("Maximum weight:\t\t\t{}", max_weight);
+        println!("Greedy search:\t\t\t{}", greedy);
+        println!("Uniform cost search max cost:\t{}", g_max);
         Ok(())
     }
-    else
-    {
-        eprintln!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}", initial_node.grid, goal);
+    else {
+        eprintln!("There is no way the provided n-puzzle can reach the goal:\nInitial state:\n{}Goal state:\n{}\n", initial_node.grid, goal);
+        eprintln!("As reminder here are the settings you requested:\n");
+        eprintln!("Algorithm:\t\t\t{}", a_type);
+        eprintln!("Heuristic:\t\t\t{}", h_type);
+        eprintln!("Maximum weight:\t\t\t{}", max_weight);
+        eprintln!("Greedy search:\t\t\t{}", greedy);
+        eprintln!("Uniform cost search max cost:\t{}", g_max);
         std::process::exit(42);
     }
 }
