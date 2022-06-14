@@ -172,7 +172,7 @@ impl Algo
     {
         if self.path.last().is_none()
         {
-            return (u64::max_value(), false);
+            return (u64::MAX, false);
         }
 
         self.t_complex += 1;
@@ -200,7 +200,7 @@ impl Algo
         {
             self.s_complex = s_complex;
         }
-        let mut lowest_f = u64::max_value();
+        let mut lowest_f = u64::MAX;
         let mut g_max_reached = false;
         for child in childs
         {
@@ -240,7 +240,7 @@ impl Algo
             {
                 return true;
             }
-            else if recurs_res == u64::max_value() || g_max_reached
+            else if recurs_res == u64::MAX || g_max_reached
             {
                 return false;
             }
