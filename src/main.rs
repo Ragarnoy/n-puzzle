@@ -18,13 +18,13 @@ use algo::{Algo, AType};
 fn sort_check_and_dedup(mut input: Vec<u16>) -> bool
 {
     let len = input.len();
-    input.sort();
+    input.sort_unstable();
     input.dedup();
     // The line below could seem weird as there is no `if` but in fact this line already returns a `bool` as expected.
     input.len() == len && *input.last().unwrap() == len as u16 - 1  && *input.first().unwrap() == 0
 }
 
-fn parser(content: String) -> Result<grid::Grid, String>
+fn parser(content: String) -> Result<Grid, String>
 {
     let mut ret: Vec<u16> = Vec::new();
     let mut content_lines = utils::remove_comment_by_line(&content, "#");
@@ -83,12 +83,11 @@ fn expect_size(nbr: String) -> Result<(), String>
 {
     if nbr.parse::<u8>().is_ok()
     {
-        if nbr.parse::<u8>().unwrap() > 2 && nbr.parse::<u8>().unwrap() < 9
+        return if nbr.parse::<u8>().unwrap() > 2 && nbr.parse::<u8>().unwrap() < 9
         {
-            return Ok(())
-        }
-        else {
-            return Err(String::from("Number must be between 2 and 8"))
+            Ok(())
+        } else {
+            Err(String::from("Number must be between 2 and 8"))
         }
     }
     Err(String::from("Expected a number"))
@@ -98,12 +97,11 @@ fn expect_weight(nbr: String) -> Result<(), String>
 {
     if nbr.parse::<u8>().is_ok()
     {
-        if nbr.parse::<u8>().unwrap() > 0 && nbr.parse::<u8>().unwrap() < 100
+        return if nbr.parse::<u8>().unwrap() > 0 && nbr.parse::<u8>().unwrap() < 100
         {
-            return Ok(())
-        }
-        else {
-            return Err(String::from("Number must be between 0 and 100"))
+            Ok(())
+        } else {
+            Err(String::from("Number must be between 0 and 100"))
         }
     }
     Err(String::from("Expected a number"))
@@ -113,12 +111,11 @@ fn expect_gscore(nbr: String) -> Result<(), String>
 {
     if nbr.parse::<u32>().is_ok()
     {
-        if nbr.parse::<u32>().unwrap() > 0 && nbr.parse::<u32>().unwrap() < u32::max_value()
+        return if nbr.parse::<u32>().unwrap() > 0 && nbr.parse::<u32>().unwrap() < u32::MAX
         {
-            return Ok(())
-        }
-        else {
-            return Err(String::from("Number must be between 0 and U32MAX"))
+            Ok(())
+        } else {
+            Err(String::from("Number must be between 0 and U32MAX"))
         }
     }
     Err(String::from("Expected a number"))
@@ -128,12 +125,11 @@ fn expect_file(file: String) -> Result<(), String>
 {
     if Path::new(&file).exists()
     {
-        if Path::new(&file).is_file()
+        return if Path::new(&file).is_file()
         {
-            return Ok(())
-        }
-        else {
-            return Err(String::from("File expected."))
+            Ok(())
+        } else {
+            Err(String::from("File expected."))
         }
     }
     Err(String::from("Path is invalid/does not exist."))
@@ -226,9 +222,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     let greedy = matches.is_present("greedy");
     let g_max: u32 = match matches.value_of("uniform")
     {
-        Some(_) if greedy => u32::max_value(),
+        Some(_) if greedy => u32::MAX,
         Some(x) => x.parse().unwrap(),
-        None => u32::max_value(),
+        None => u32::MAX,
     };
     let max_weight: u32 = match matches.value_of("weight")
     {
@@ -243,7 +239,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
         error_handler(Err(String::from("It's not allowed to perform greedy search with IDA* algorithm\nPlease select another algorithm or remove the use of option `-g`")))
     }
     let h_type = error_handler(HType::from_str_or_default(matches.value_of("heuristic")));
-    let mut initial_node = Node::new(State::default(), grid.clone());
+    let mut initial_node = Node::new(State::default(), grid);
 	let goal = Grid::new(puzzle_gen::create_snail_goal(lines), lines as u8);
     initial_node.update_state(&goal, h_type, 1, greedy);
     let mut algo = Algo::new(initial_node.clone(), goal.clone(), h_type, a_type, 1, max_weight, g_max, greedy);
