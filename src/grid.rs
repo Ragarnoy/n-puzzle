@@ -128,7 +128,7 @@ impl Grid
         let mut puzzle = Self::new(create_snail_goal(lines), lines);
         for _ in 0..(512 * lines as u128)
         {
-            puzzle = puzzle.move_zero(Move::from(rng.gen_range(0, 4))).unwrap_or(puzzle);
+            puzzle = puzzle.move_zero(Move::from(rng.gen_range(0..4))).unwrap_or(puzzle);
         }
         puzzle
     }
